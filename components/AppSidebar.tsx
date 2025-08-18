@@ -55,7 +55,7 @@ const items = [
 export function AppSidebar() {
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader className="p-4">
+            <SidebarHeader className="">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild>
@@ -73,8 +73,8 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                <SidebarSeparator />
             </SidebarHeader>
-            <SidebarSeparator />
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -182,8 +182,8 @@ export function AppSidebar() {
 
                     </SidebarGroupContent>
                 </SidebarGroup>
-
             </SidebarContent>
+
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -195,10 +195,10 @@ export function AppSidebar() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 side="top"
-                                className="w-full">
-                                <DropdownMenuItem>Account</DropdownMenuItem>
-                                <DropdownMenuItem>Setting</DropdownMenuItem>
-                                <DropdownMenuItem>Logout</DropdownMenuItem>
+                                className="w-[--radix-popper-anchor-width]">
+                                <DropdownMenuItem><span>Account</span></DropdownMenuItem>
+                                <DropdownMenuItem><span>Setting</span></DropdownMenuItem>
+                                <DropdownMenuItem><span>Logout</span></DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
