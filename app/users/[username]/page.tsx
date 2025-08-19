@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button"
 import EditUser from "@/components/EditUser"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import AppLineChart from "@/components/AppLineChart"
 
 export default function SinglePage() {
     return (
@@ -49,7 +50,7 @@ export default function SinglePage() {
                 {/* LEFT */}
                 <div className="w-full xl:w-1/3 space-y-6">
                     {/* USER BADGES CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2">
+                    <div className="bg-card p-4 rounded-lg border-1">
                         <h1 className="text-xl font-semibold">
                             User Badges
                         </h1>
@@ -103,7 +104,7 @@ export default function SinglePage() {
                     </div>
 
                     {/* INFORMATION CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2">
+                    <div className="bg-card p-4 rounded-lg border-1">
                         <div className="flex items-center justify-between">
                             <h1 className="text-xl font-semibold">User Information</h1>
 
@@ -151,14 +152,14 @@ export default function SinglePage() {
                     </div>
 
                     {/* CARD LIST CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2">
+                    <div className="bg-card p-4 rounded-lg border-1">
                         <CardList title="Recent Transactions" />
                     </div>
                 </div>
                 {/* RIGHT */}
                 <div className="w-full xl:w-2/3 space-y-6">
                     {/* USER CARD CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2 space-y-2">
+                    <div className="bg-card p-4 rounded-lg border-1 space-y-2">
                         <div className="flex items-center gap-2">
                             <Avatar className="size-12">
                                 <AvatarImage src="https://github.com/shadcn.png" />
@@ -174,8 +175,9 @@ export default function SinglePage() {
                     </div>
 
                     {/* CHART CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2">
-                        Chart
+                    <div className="bg-card p-4 rounded-lg border-1">
+                        <h1 className="text-xl font-semibold">User Activity</h1>
+                        <AppLineChart />
                     </div>
                 </div>
             </div>
