@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import EditUser from "@/components/EditUser"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function SinglePage() {
     return (
@@ -104,16 +105,16 @@ export default function SinglePage() {
                     {/* INFORMATION CONTAINER */}
                     <div className="bg-card p-4 rounded-lg border-2">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-xl font-semibold">
-                                User Information
-                            </h1>
+                            <h1 className="text-xl font-semibold">User Information</h1>
 
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button>Edit Profile</Button>
-                                </SheetTrigger>
-                                <EditUser />
-                            </Sheet>
+                            <div>
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <Button>Edit Profile</Button>
+                                    </SheetTrigger>
+                                    <EditUser />
+                                </Sheet>
+                            </div>
                         </div>
                         <div className="space-y-4 mt-4">
                             <div className="flex flex-col gap-2 mb-8">
@@ -157,8 +158,19 @@ export default function SinglePage() {
                 {/* RIGHT */}
                 <div className="w-full xl:w-2/3 space-y-6">
                     {/* USER CARD CONTAINER */}
-                    <div className="bg-card p-4 rounded-lg border-2">
-                        User Card
+                    <div className="bg-card p-4 rounded-lg border-2 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Avatar className="size-12">
+                                <AvatarImage src="https://github.com/shadcn.png" />
+                                <AvatarFallback>JD</AvatarFallback>
+                            </Avatar>
+                            <h1 className="text-xl font-semibold">John Doe</h1>
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                            Expedita maxime at similique ullam error dicta, suscipit iusto quam officiis placeat!
+                        </p>
                     </div>
 
                     {/* CHART CONTAINER */}
