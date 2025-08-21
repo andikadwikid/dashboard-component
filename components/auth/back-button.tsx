@@ -11,7 +11,7 @@ interface BackButtonProps {
 
 const BackButton = ({ href, label }: BackButtonProps) => {
     return (
-        <div>
+        <div className="flex items-center w-full">
             <Button variant={"link"} size={"sm"} className="font-normal w-full text-slate-500" asChild>
                 <Link href={href}>
                     {label}
