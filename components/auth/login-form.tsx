@@ -1,14 +1,16 @@
 "use client"
 
-import * as z from "zod"
-import { CardWrapper } from "@/components/auth/card-wrapper"
-import { useForm } from "react-hook-form"
+import * as z from "zod";
+import { CardWrapper } from "@/components/auth/card-wrapper";
+import { useForm } from "react-hook-form";
 
-import { LoginSchema } from "@/schema"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { LoginSchema } from "@/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import FormError from "@/components/form-error";
+import FormSuccess from "@/components/form-success";
 
 const LoginForm = () => {
     const form = useForm<z.infer<typeof LoginSchema>>({
@@ -72,6 +74,8 @@ const LoginForm = () => {
                             )}
                         />
                     </div>
+                    <FormError message="" />
+                    <FormSuccess message="" />
                     <Button
                         type="submit"
                         className="w-full"
