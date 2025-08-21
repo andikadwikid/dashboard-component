@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Highcharts from "highcharts/highmaps";
 import { useTheme } from "next-themes";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const IndonesiaMapChart: React.FC = () => {
     const chartRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ const IndonesiaMapChart: React.FC = () => {
                         backgroundColor: isDark ? "#0f172a" : "#ffffff",
                     },
                     title: {
-                        text: "Data Penjualan di Indonesia",
+                        text: "",
                         style: {
                             color: isDark ? "#f8fafc" : "#0f172a",
                         },
@@ -95,9 +96,18 @@ const IndonesiaMapChart: React.FC = () => {
     }, [theme]); // <- rerun tiap kali theme berubah
 
     return (
-        <div className="w-full h-full">
-            <div ref={chartRef} id="container" className="w-full h-96 min-h-96" />
-        </div>
+        // <div className="w-full h-full">
+        <Card>
+            <CardHeader>
+                <h1 className="text-lg font-medium">
+                    Data Penjualan di Indonesia
+                </h1>
+            </CardHeader>
+            <CardContent>
+                <div ref={chartRef} id="container" className="w-full h-96 min-h-96" />
+            </CardContent>
+        </Card>
+        // </div> 
     );
 };
 
