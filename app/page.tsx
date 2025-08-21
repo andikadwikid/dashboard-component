@@ -25,7 +25,7 @@ export default function Home() {
           </p>
 
           <div>
-            <LoginButton mode="modal">
+            <LoginButton>
               <Button variant={"secondary"} size={"lg"} className="w-full">
                 Sign In
               </Button>
