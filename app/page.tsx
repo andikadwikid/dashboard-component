@@ -1,34 +1,38 @@
-import AppAreaChart from "@/components/AppAreaChart";
-import AppBarChart from "@/components/AppBarChart";
-import IndonesiaMap from "@/components/AppChartMapIndo";
-import AppPieChart from "@/components/AppPieChart";
-import CardList from "@/components/CardList";
-import TodoList from "@/components/TodoList";
+import { LoginButton } from "@/components/auth/login-button";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Poppins } from "next/font/google";
+
+const font = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '700']
+});
 
 export default function Home() {
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-4 mb-4">
-        <div className="p-4 rounded-lg col-span-1 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
-          {/* <AppBarChart /> */}
-          <IndonesiaMap />
+      <main className="flex h-full flex-col items-center justify-center 
+        bg-radial-[at_25%_25%] from-blue-400 to-blue-800 to-75%">
+        <div className="space-y-6 text-center">
+          <h1 className={cn(
+            "text-6xl font-semibold text-white drop-shadow-md",
+            font.className
+          )}>
+            🔐 Auth
+          </h1>
+          <p className="text-white text-lg">
+            Simple authentication service
+          </p>
+
+          <div>
+            <LoginButton mode="modal">
+              <Button variant={"secondary"} size={"lg"} className="w-full">
+                Sign In
+              </Button>
+            </LoginButton>
+          </div>
         </div>
-        <div className="p-4 rounded-lg col-span-1 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
-          <AppBarChart />
-        </div>
-        <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
-          <CardList title="Latest Transactions" />
-        </div>
-        <div className="bg-card border-1 p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
-          <AppPieChart />
-        </div>
-        <div className="bg-card border-1 p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
-          <TodoList />
-        </div>
-        {/* <div className="bg-card border-1 p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
-          <CardList title="Popular Content" />
-        </div> */}
-      </div>
+      </main >
     </>
   );
 }
