@@ -1,18 +1,32 @@
-"use client"
+"use client";
 
 import * as z from "zod";
+import { useState, useTransition } from "react";
 import { CardWrapper } from "@/components/auth/card-wrapper";
 import { useForm } from "react-hook-form";
 
 import { LoginSchema } from "@/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FormError from "@/components/form-error";
 import FormSuccess from "@/components/form-success";
+import { login } from "@/actions/login";
 
 const LoginForm = () => {
+    const [error, setError] = useState<string | undefined>("");
+    const [success, setSuccess] = useState<string | undefined>("");
+
+    const [isPending, startTransition] = useTransition();
+
     const form = useForm<z.infer<typeof LoginSchema>>({
         resolver: zodResolver(LoginSchema),
         defaultValues: {
@@ -22,21 +36,31 @@ const LoginForm = () => {
     });
 
     const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
-        console.log(values)
-    }
+        setError("");
+        setSuccess("");
+
+        startTransition(() => {
+            // form.reset();
+            login(values).then((res) => {
+                if (res.error) {
+                    setError(res.error);
+                } else {
+                    setSuccess(res.success);
+                }
+            })
+        });
+
+    };
 
     return (
         <CardWrapper
             headerLabel="Welcome back"
-            backButtonLabel="Don&apos;t have an account?"
+            backButtonLabel="Don't have an account?"
             backButtonHref="/auth/register"
             showSocial
         >
             <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-6"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-4">
                         <FormField
                             control={form.control}
@@ -46,6 +70,7 @@ const LoginForm = () => {
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
                                         <Input
+                                            disabled={isPending}
                                             placeholder="Enter your email"
                                             type="email"
                                             {...field}
@@ -64,29 +89,25 @@ const LoginForm = () => {
                                     <FormLabel>Password</FormLabel>
                                     <FormControl>
                                         <Input
+                                            disabled={isPending}
                                             placeholder="********"
                                             type="password"
-                                            {...field}
-                                        />
+                                            {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-                    <FormError message="" />
-                    <FormSuccess message="" />
-                    <Button
-                        type="submit"
-                        className="w-full"
-                    >
+                    <FormError message={error} />
+                    <FormSuccess message={success} />
+                    <Button type="submit" className="w-full" disabled={isPending}>
                         Login
                     </Button>
                 </form>
             </Form>
         </CardWrapper>
+    );
+};
 
-    )
-}
-
-export default LoginForm
+export default LoginForm;
