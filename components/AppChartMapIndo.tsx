@@ -4,6 +4,15 @@ import React, { useEffect, useRef } from "react";
 import Highcharts from "highcharts/highmaps";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
 
 const IndonesiaMapChart: React.FC = () => {
     const chartRef = useRef<HTMLDivElement>(null);
@@ -99,9 +108,25 @@ const IndonesiaMapChart: React.FC = () => {
         // <div className="w-full h-full">
         <Card>
             <CardHeader>
-                <h1 className="text-lg font-medium">
-                    Data Penjualan di Indonesia
-                </h1>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+                    <h1 className="text-lg font-medium">
+                        Data Penjualan di Indonesia
+                    </h1>
+
+                    <Select>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select Periode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Periode</SelectLabel>
+                                <SelectItem value="2024">2024</SelectItem>
+                                <SelectItem value="2025">2025</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+
             </CardHeader>
             <CardContent>
                 <div ref={chartRef} id="container" className="w-full h-96 min-h-96" />

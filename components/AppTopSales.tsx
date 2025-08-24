@@ -15,23 +15,25 @@ import {
 import React from "react";
 
 const chartConfig = {
-    desktop: {
-        label: "Desktop",
+    penjualan: {
+        label: "Penjualan",
         color: "var(--chart-1)",
     },
-    mobile: {
-        label: "Mobile",
-        color: "var(--chart-2)",
-    },
+
 } satisfies ChartConfig
 
 const chartData = [
-    { month: "January", desktop: 186, mobile: 80 },
-    { month: "February", desktop: 305, mobile: 200 },
-    { month: "March", desktop: 237, mobile: 120 },
-    { month: "April", desktop: 73, mobile: 190 },
-    { month: "May", desktop: 209, mobile: 130 },
-    { month: "June", desktop: 214, mobile: 140 },
+    { sales: "Joe", penjualan: 186 },
+    { sales: "David", penjualan: 305 },
+    { sales: "Alice", penjualan: 237 },
+    { sales: "Mark", penjualan: 73 },
+    { sales: "Katie", penjualan: 209 },
+    { sales: "Chris", penjualan: 214 },
+    { sales: "John", penjualan: 120 },
+    { sales: "Jane", penjualan: 150 },
+    { sales: "Fiona", penjualan: 101 },
+    { sales: "Paul", penjualan: 109}
+
 ]
 const AppBarChart = () => {
     return (
@@ -39,7 +41,7 @@ const AppBarChart = () => {
             <Card>
                 <CardHeader>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-                        <h1 className="text-lg font-medium mb-2">Total Revenue</h1>
+                        <h1 className="text-lg font-medium mb-2">Top 10 Sales</h1>
 
                         <Select>
                             <SelectTrigger className="w-[180px]">
@@ -57,14 +59,14 @@ const AppBarChart = () => {
                 </CardHeader>
                 <CardContent>
                     <ChartContainer config={chartConfig} className="h-full w-full">
-                        <BarChart accessibilityLayer data={chartData}>
+                        <BarChart accessibilityLayer data={chartData.sort((a, b) => b.penjualan - a.penjualan)}>
                             <CartesianGrid vertical={false} horizontal={true} />
                             <XAxis
-                                dataKey="month"
+                                dataKey="sales"
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
-                                tickFormatter={(value) => value.slice(0, 3)}
+                                // tickFormatter={(value) => value.slice(0, 3)}
                             />
 
                             <YAxis
@@ -76,8 +78,7 @@ const AppBarChart = () => {
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <ChartLegend content={<ChartLegendContent />} />
 
-                            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-                            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+                            <Bar dataKey="penjualan" fill="var(--chart-4)" radius={4} />
                         </BarChart>
                     </ChartContainer>
                 </CardContent>
