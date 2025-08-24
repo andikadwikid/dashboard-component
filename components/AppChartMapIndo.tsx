@@ -37,7 +37,7 @@ const IndonesiaMapChart: React.FC = () => {
                 const chartOptions: Highcharts.Options = {
                     chart: {
                         map: topology,
-                        backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                        backgroundColor: isDark ? "#2f3436" : "#ffffff",
                     },
                     title: {
                         text: "",
@@ -51,7 +51,7 @@ const IndonesiaMapChart: React.FC = () => {
                     },
                     colorAxis: {
                         min: 0,
-                        minColor: isDark ? "#374151" : "#b7fb97",
+                        minColor: isDark ? "#2f3436" : "#b7fb97",
                         maxColor: isDark ? "#22c55e" : "#194802",
                     },
                     series: [

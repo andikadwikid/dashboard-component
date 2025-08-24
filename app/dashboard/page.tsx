@@ -4,12 +4,29 @@ import IndonesiaMap from "@/components/AppChartMapIndo";
 import AppPieChart from "@/components/AppPieChart";
 import CardList from "@/components/CardList";
 import TodoList from "@/components/TodoList";
+import CardSection from "@/components/CardSection";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-4 mb-4">
-        <div className="p-4 rounded-lg col-span-1 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
+          <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+              <CardSection/>
+          </div>
+
+          <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+              <CardSection/>
+          </div>
+
+          <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+              <CardSection/>
+          </div>
+
+          <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+              <CardSection/>
+          </div>
+          <div className="p-4 rounded-lg col-span-1 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
           {/* <AppBarChart /> */}
           <IndonesiaMap />
         </div>

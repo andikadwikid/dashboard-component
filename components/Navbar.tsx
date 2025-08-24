@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { LogOut, Moon, Settings, SquareMenu, Sun, User } from 'lucide-react'
-import Link from 'next/link'
-import React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { LogOut, Moon, Settings, SquareMenu, Sun, User } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,19 +11,21 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from '@/components/ui/button'
-import { useTheme } from 'next-themes'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { logout } from "@/actions/logout"; // ✅ import server action
 
 export const Navbar = () => {
     const { setTheme } = useTheme();
     const { toggleSidebar } = useSidebar();
+
     return (
         <nav className="p-4 flex items-center justify-between sticky top-0 bg-background z-50">
             {/* LEFT */}
             <SidebarTrigger />
-            {/* <Button variant={"outline"} onClick={toggleSidebar}>Custom Button</Button> */}
+
             {/* RIGHT */}
             <div className="flex items-center gap-4">
                 <Link href="/">Dashboard</Link>
@@ -38,15 +40,9 @@ export const Navbar = () => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setTheme("light")}>
-                            Light
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("dark")}>
-                            Dark
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("system")}>
-                            System
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -69,9 +65,17 @@ export const Navbar = () => {
                             <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
                             Settings
                         </DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive">
-                            <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
-                            Log out
+
+                        {/* ✅ FIX LOGOUT */}
+                        <DropdownMenuItem asChild>
+
+                                <button onClick={async () =>{
+                                    await logout();
+                                }}
+                                        className="flex items-center w-full">
+                                    <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
+                                    Log out
+                                </button>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -80,7 +84,7 @@ export const Navbar = () => {
                     <DropdownMenuTrigger asChild>
                         <Button variant={"outline"} size={"icon"}>
                             <SquareMenu />
-                            <span className='sr-only'> Open Menu</span>
+                            <span className="sr-only"> Open Menu</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
@@ -92,8 +96,7 @@ export const Navbar = () => {
                         <DropdownMenuItem>Subscription</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-
             </div>
         </nav>
-    )
-}
+    );
+};
