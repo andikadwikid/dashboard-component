@@ -2,8 +2,10 @@
 
 import {
     ColumnDef,
+    ColumnFiltersState,
     flexRender,
     getCoreRowModel,
+    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
     SortingState,
@@ -22,6 +24,7 @@ import {
 // import { Button } from "@/components/ui/button"
 import { DataTablePagination } from "@/components/TablePagination"
 import { useState } from "react"
+import { Input } from "@/components/ui/input"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -34,6 +37,9 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([])
     const [rowSelection, setRowSelection] = useState({})
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+        []
+    )
 
     const table = useReactTable({
         data,
@@ -43,14 +49,27 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         getSortedRowModel: getSortedRowModel(),
         onRowSelectionChange: setRowSelection,
+        onColumnFiltersChange: setColumnFilters,
+        getFilteredRowModel: getFilteredRowModel(),
         state: {
             sorting,
             rowSelection,
+            columnFilters,
         },
     })
 
     return (
         <div>
+            <div className="flex items-center py-4">
+                <Input
+                    placeholder="Filter emails..."
+                    value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn("email")?.setFilterValue(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
+            </div>
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
