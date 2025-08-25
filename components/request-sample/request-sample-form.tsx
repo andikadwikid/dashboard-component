@@ -2,9 +2,9 @@
 
 import * as z from "zod";
 import { useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
-import { RegisterSchema, RequestSampleSchema } from "@/schema";
+import { RequestSampleSchema } from "@/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Form,
@@ -18,15 +18,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FormError from "@/components/form-error";
 import FormSuccess from "@/components/form-success";
-import { register } from "@/actions/register";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronsUpDown } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+
+const regions = [
+    { label: "Sumatra", value: "sumatra" },
+    { label: "Jawa", value: "jawa" },
+    { label: "Kalimantan", value: "kalimantan" },
+    { label: "Sulawesi", value: "sulawesi" },
+]
+
 
 const RequestSampleForm = () => {
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
 
     const [isPending, startTransition] = useTransition();
+
+    const [openRegion, setOpenRegion] = useState(false)
+
 
     const form = useForm<z.infer<typeof RequestSampleSchema>>({
         resolver: zodResolver(RequestSampleSchema),
@@ -180,30 +193,54 @@ const RequestSampleForm = () => {
                                 <FormField
                                     control={form.control}
                                     name="region"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Region</FormLabel>
-                                            <FormControl>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    value={field.value}
-                                                >
-                                                    <SelectTrigger
-                                                        className={`w-auto cursor-pointer ${form.formState.errors.region ? "border-red-500 ring-red-500" : ""
-                                                            }`}
-                                                    >
-                                                        <SelectValue placeholder="Region" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="admin">Sumatra</SelectItem>
-                                                        <SelectItem value="user">Jawa</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
+                                    render={({ field }) => {
+
+                                        return (
+                                            <FormItem>
+                                                <FormLabel>Region</FormLabel>
+                                                <FormControl>
+                                                    <Popover open={openRegion} onOpenChange={setOpenRegion}>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                role="combobox"
+                                                                className={`w-auto justify-between ${form.formState.errors.region ? "border-red-500 ring-red-500" : ""
+                                                                    }`}
+                                                            >
+                                                                {field.value
+                                                                    ? regions.find((r) => r.value === field.value)?.label
+                                                                    : "Select region..."}
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent align="start" className="w-full p-0">
+                                                            <Command>
+                                                                <CommandInput placeholder="Search region..." />
+                                                                <CommandEmpty>No region found.</CommandEmpty>
+                                                                <CommandGroup>
+                                                                    {regions.map((region) => (
+                                                                        <CommandItem
+                                                                            key={region.value}
+                                                                            value={region.value}
+                                                                            onSelect={() => {
+                                                                                field.onChange(region.value)   // update react-hook-form
+                                                                                setOpenRegion(false)                 // tutup popover
+                                                                            }}
+                                                                        >
+                                                                            {region.label}
+                                                                        </CommandItem>
+                                                                    ))}
+                                                                </CommandGroup>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )
+                                    }}
                                 />
+
 
                             </div>
                             <FormError message={error} />
