@@ -1,15 +1,11 @@
 "use client"
 
 import {
-    Calendar,
+    ChartPie,
     ChevronDown,
     ChevronUp,
-    Home,
-    Inbox,
     Plus,
     Projector,
-    Search,
-    Settings,
     User,
 } from "lucide-react"
 import Link from "next/link"
@@ -18,7 +14,6 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
-    SidebarGroupAction,
     SidebarGroupContent,
     SidebarGroupLabel,
     SidebarHeader,
@@ -34,6 +29,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { LucideIcon } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 // ✅ Data dinamis untuk menu
 type MenuItem = {
@@ -53,45 +49,53 @@ const menuGroups: {
         {
             label: "Application",
             items: [
-                { title: "Home", url: "/", icon: Home },
-                { title: "Inbox", url: "/inbox", icon: Inbox, badge: 2 },
-                { title: "Calendar", url: "/calendar", icon: Calendar },
-                { title: "Search", url: "/search", icon: Search },
-                { title: "Settings", url: "/settings", icon: Settings },
+                { title: "Dashboard", url: "/admin/dashboard", icon: ChartPie },
+                // { title: "Inbox", url: "/inbox", icon: Inbox, badge: 2 },
+                // { title: "Calendar", url: "/calendar", icon: Calendar },
+                // { title: "Search", url: "/search", icon: Search },
+                // { title: "Settings", url: "/settings", icon: Settings },
             ],
         },
         {
-            label: "Project",
+            label: "Request sample",
             action: { icon: Plus, label: "Add Project" },
             items: [
-                { title: "See All Project", url: "/projects", icon: Projector },
-                { title: "Add Project", url: "/projects/add", icon: Plus },
+                { title: "Show All", url: "/admin/request-sample", icon: Projector },
+                { title: "Create", url: "/admin/request-sample/create", icon: Plus },
             ],
         },
         {
-            label: "Help",
+            label: "Order",
             items: [
-                { title: "See All Project", url: "/help/projects", icon: Projector },
-                { title: "Add Project", url: "/help/add", icon: Plus },
+                { title: "Show All", url: "/admin/order", icon: Projector },
+                { title: "Create", url: "/admin/order/create", icon: Plus },
             ],
         },
         {
-            label: "Nested Item",
+            label: "Settings",
             items: [
-                {
-                    title: "See All Project",
-                    url: "/nested",
-                    icon: Projector,
-                    children: [
-                        { title: "Add Project", url: "/nested/add", icon: Plus },
-                        { title: "Add Category", url: "/nested/category", icon: Plus },
-                    ],
-                },
+                { title: "Role & Permission", url: "/admin/settings/role", icon: Projector },
             ],
         },
+        // {
+        //     label: "Nested Item",
+        //     items: [
+        //         {
+        //             title: "See All Project",
+        //             url: "/nested",
+        //             icon: Projector,
+        //             children: [
+        //                 { title: "Add Project", url: "/nested/add", icon: Plus },
+        //                 { title: "Add Category", url: "/nested/category", icon: Plus },
+        //             ],
+        //         },
+        //     ],
+        // },
     ]
 
 export function AppSidebar() {
+    const pathname = usePathname();
+
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -108,25 +112,27 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {menuGroups.map((group, idx) => {
+                {menuGroups.map((group, idx) => (
+                    <Collapsible key={idx} defaultOpen className="group/collapsible">
+                        <SidebarGroup>
+                            <SidebarGroupLabel asChild>
+                                <CollapsibleTrigger>
+                                    {group.label}
+                                    <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                </CollapsibleTrigger>
+                            </SidebarGroupLabel>
 
-                    // Default group
-                    return (
-                        <Collapsible key={idx} defaultOpen className="group/collapsible">
-                            <SidebarGroup>
-                                <SidebarGroupLabel asChild>
-                                    <CollapsibleTrigger>
-                                        {group.label}
-                                        <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                                    </CollapsibleTrigger>
-                                </SidebarGroupLabel>
-
-                                <CollapsibleContent>
-                                    <SidebarGroupContent>
-                                        <SidebarMenu>
-                                            {group.items.map((item) => (
+                            <CollapsibleContent>
+                                <SidebarGroupContent>
+                                    <SidebarMenu>
+                                        {group.items.map((item) => {
+                                            const isActive = pathname === item.url
+                                            return (
                                                 <SidebarMenuItem key={item.title}>
-                                                    <SidebarMenuButton asChild>
+                                                    <SidebarMenuButton
+                                                        asChild
+                                                        isActive={isActive}
+                                                    >
                                                         <Link href={item.url || "#"}>
                                                             {item.icon && <item.icon />}
                                                             <span>{item.title}</span>
@@ -137,27 +143,33 @@ export function AppSidebar() {
                                                     {/* nested */}
                                                     {item.children && (
                                                         <SidebarMenuSub>
-                                                            {item.children.map((child) => (
-                                                                <SidebarMenuSubItem key={child.title}>
-                                                                    <SidebarMenuSubButton asChild>
-                                                                        <Link href={child.url || "#"}>
-                                                                            {child.icon && <child.icon />}
-                                                                            <span>{child.title}</span>
-                                                                        </Link>
-                                                                    </SidebarMenuSubButton>
-                                                                </SidebarMenuSubItem>
-                                                            ))}
+                                                            {item.children.map((child) => {
+                                                                const childActive = pathname === child.url
+                                                                return (
+                                                                    <SidebarMenuSubItem key={child.title}>
+                                                                        <SidebarMenuSubButton
+                                                                            asChild
+                                                                            isActive={childActive}
+                                                                        >
+                                                                            <Link href={child.url || "#"}>
+                                                                                {child.icon && <child.icon />}
+                                                                                <span>{child.title}</span>
+                                                                            </Link>
+                                                                        </SidebarMenuSubButton>
+                                                                    </SidebarMenuSubItem>
+                                                                )
+                                                            })}
                                                         </SidebarMenuSub>
                                                     )}
                                                 </SidebarMenuItem>
-                                            ))}
-                                        </SidebarMenu>
-                                    </SidebarGroupContent>
-                                </CollapsibleContent>
-                            </SidebarGroup>
-                        </Collapsible>
-                    )
-                })}
+                                            )
+                                        })}
+                                    </SidebarMenu>
+                                </SidebarGroupContent>
+                            </CollapsibleContent>
+                        </SidebarGroup>
+                    </Collapsible>
+                ))}
             </SidebarContent>
 
             <SidebarFooter>

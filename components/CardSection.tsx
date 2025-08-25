@@ -1,9 +1,8 @@
-import {Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
+import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const CardSection = (
-    {title, total, description}:
-    {title: string, total: number, description: string}
+    { title, total, description }:
+        { title: string, total: string, description: string }
 ) => {
     return (
         <Card>
