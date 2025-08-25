@@ -5,7 +5,8 @@ import {
     ChevronDown,
     ChevronUp,
     Plus,
-    Projector,
+    ShieldBan,
+    TableOfContents,
     User,
 } from "lucide-react"
 import Link from "next/link"
@@ -60,21 +61,21 @@ const menuGroups: {
             label: "Request sample",
             action: { icon: Plus, label: "Add Project" },
             items: [
-                { title: "Show All", url: "/admin/request-sample", icon: Projector },
+                { title: "Show All", url: "/admin/request-sample", icon: TableOfContents },
                 { title: "Create", url: "/admin/request-sample/create", icon: Plus },
             ],
         },
         {
             label: "Order",
             items: [
-                { title: "Show All", url: "/admin/order", icon: Projector },
+                { title: "Show All", url: "/admin/order", icon: TableOfContents },
                 { title: "Create", url: "/admin/order/create", icon: Plus },
             ],
         },
         {
             label: "Settings",
             items: [
-                { title: "Role & Permission", url: "/admin/settings/role", icon: Projector },
+                { title: "Role & Permission", url: "/admin/settings/role", icon: ShieldBan },
             ],
         },
         // {

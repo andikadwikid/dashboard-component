@@ -3,7 +3,6 @@
 import AppBarChart from "@/components/AppBarChart";
 import IndonesiaMap from "@/components/AppChartMapIndo";
 import AppPieChart from "@/components/AppPieChart";
-import TodoList from "@/components/TodoList";
 import CardSection from "@/components/CardSection";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useState } from "react";
@@ -76,12 +75,10 @@ export default function DashboardPage() {
                 <div className="p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
                     <AppTopSales />
                 </div>
-                <div className="bg-card border-1 p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
+                <div className="p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
                     <AppPieChart />
                 </div>
-                <div className="bg-card border-1 p-4 rounded-lg col-span-1 lg:col-span-2 xl:col-span-2 2xl:col-span-2">
-                    <TodoList />
-                </div>
+
             </div>
         </>
     );

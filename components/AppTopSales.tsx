@@ -2,7 +2,7 @@
 
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import {Card, CardContent, CardHeader} from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
     Select,
     SelectContent,
@@ -32,7 +32,7 @@ const chartData = [
     { sales: "John", penjualan: 120 },
     { sales: "Jane", penjualan: 150 },
     { sales: "Fiona", penjualan: 101 },
-    { sales: "Paul", penjualan: 109}
+    { sales: "Paul", penjualan: 109 }
 
 ]
 const AppBarChart = () => {
@@ -66,7 +66,7 @@ const AppBarChart = () => {
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
-                                // tickFormatter={(value) => value.slice(0, 3)}
+                            // tickFormatter={(value) => value.slice(0, 3)}
                             />
 
                             <YAxis
