@@ -35,6 +35,12 @@ model Account {
   @@map("accounts")
 }
 
+enum UserRole {
+  ADMIN
+  SALES
+  OWNER
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -42,7 +48,105 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
   password      String?
+  role          UserRole  @default(SALES)
   accounts      Account[]
+  Order         Order[]
 
   @@map("users")
+}
+
+model Region {
+  id        String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @map("created_at")
+  updatedAt DateTime   @map("updated_at")
+  Customer  Customer[]
+
+  @@map("regions")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String
+  address   String
+  region_id String
+  farm_name String
+  altitude  String
+  variety   String
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  region          Region            @relation(fields: [region_id], references: [id])
+  CustomerHistory CustomerHistory[]
+
+  @@map("customers")
+}
+
+model CustomerHistory {
+  id          String   @id @default(cuid())
+  customer_id String
+  name        String
+  contact     String
+  address     String
+  region_name String
+  farm_name   String
+  altitude    String
+  variety     String
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @map("updated_at")
+
+  customer Customer @relation(fields: [customer_id], references: [id])
+  Order    Order[]
+
+  @@map("customer_history")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category_id String
+  price       Int
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @map("updated_at")
+
+  category Category @relation(fields: [category_id], references: [id])
+
+  @@map("products")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  Product Product[]
+
+  @@map("categories")
+}
+
+enum OrderStatus {
+  warehouse_request
+  shipped
+  delivered
+  closed
+  completed
+  cancelled
+  amended
+}
+
+model Order {
+  id                  String      @id @default(cuid())
+  customer_history_id String
+  sales_id            String
+  status              OrderStatus
+  createdAt           DateTime    @map("created_at")
+  updatedAt           DateTime    @map("updated_at")
+
+  customer_history CustomerHistory @relation(fields: [customer_history_id], references: [id])
+  sales            User            @relation(fields: [sales_id], references: [id])
+
+  @@index([sales_id, status, createdAt])
+  @@map("orders")
 }

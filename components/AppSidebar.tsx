@@ -76,6 +76,8 @@ const menuGroups: {
         {
             label: "Master Data",
             items: [
+                { title: "Customer", url: "/admin/master-data/customer", icon: Database },
+                { title: "Sales", url: "/admin/master-data/sales", icon: Database },
                 { title: "Region", url: "/admin/master-data/region", icon: Database },
             ],
         },

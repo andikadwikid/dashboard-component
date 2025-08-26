@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { logout } from "@/actions/logout"; // ✅ import server action
+import { logout } from "@/actions/auth/logout"; // ✅ import server action
 
 export const Navbar = () => {
     const { setTheme } = useTheme();
@@ -69,13 +69,13 @@ export const Navbar = () => {
                         {/* ✅ FIX LOGOUT */}
                         <DropdownMenuItem asChild>
 
-                                <button onClick={async () =>{
-                                    await logout();
-                                }}
-                                        className="flex items-center w-full">
-                                    <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
-                                    Log out
-                                </button>
+                            <button onClick={async () => {
+                                await logout();
+                            }}
+                                className="flex items-center w-full">
+                                <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
+                                Log out
+                            </button>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
