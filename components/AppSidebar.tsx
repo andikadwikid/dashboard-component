@@ -4,6 +4,7 @@ import {
     ChartPie,
     ChevronDown,
     ChevronUp,
+    Database,
     Plus,
     ShieldBan,
     TableOfContents,
@@ -70,6 +71,12 @@ const menuGroups: {
             items: [
                 { title: "Show All", url: "/admin/order", icon: TableOfContents },
                 { title: "Create", url: "/admin/order/create", icon: Plus },
+            ],
+        },
+        {
+            label: "Master Data",
+            items: [
+                { title: "Region", url: "/admin/master-data/region", icon: Database },
             ],
         },
         {

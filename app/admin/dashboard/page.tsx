@@ -44,25 +44,25 @@ export default function DashboardPage() {
 
                 <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
                     <CardSection
-                        title={"Total Order"}
+                        title={"Order Closed"}
                         total="50"
-                        description={`Total Order ${timeRange}`}
+                        description={`Total Order Closed ${timeRange}`}
                     />
                 </div>
 
                 <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
                     <CardSection
-                        title={"Total Request Sample"}
+                        title={"Order Completed"}
+                        total="50"
+                        description={`Total Order Completed ${timeRange}`}
+                    />
+                </div>
+
+                <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+                    <CardSection
+                        title={"Order Outstanding"}
                         total="80"
-                        description={`Total Request Sample ${timeRange}`}
-                    />
-                </div>
-
-                <div className="p-4 rounded-lg col-span-1 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
-                    <CardSection
-                        title={"Total Penjualan"}
-                        total="30"
-                        description={`Nilai Penjualan ${timeRange}`}
+                        description={`Total Order Outstanding ${timeRange}`}
                     />
                 </div>
 
