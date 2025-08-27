@@ -42,15 +42,16 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
+  email         String?       @unique
+  emailVerified DateTime?     @map("email_verified")
   image         String?
   password      String?
-  role          UserRole  @default(SALES)
+  role          UserRole      @default(SALES)
   accounts      Account[]
   Order         Order[]
+  ActivityLog   ActivityLog[]
 
   @@map("users")
 }
@@ -110,7 +111,8 @@ model Product {
   createdAt   DateTime @map("created_at")
   updatedAt   DateTime @map("updated_at")
 
-  category Category @relation(fields: [category_id], references: [id])
+  category  Category    @relation(fields: [category_id], references: [id])
+  OrderItem OrderItem[]
 
   @@map("products")
 }
@@ -127,7 +129,7 @@ model Category {
 }
 
 enum OrderStatus {
-  warehouse_request
+  pending
   shipped
   delivered
   closed
@@ -146,7 +148,53 @@ model Order {
 
   customer_history CustomerHistory @relation(fields: [customer_history_id], references: [id])
   sales            User            @relation(fields: [sales_id], references: [id])
+  OrderProgress    OrderProgress[]
+  OrderItem        OrderItem[]
 
   @@index([sales_id, status, createdAt])
   @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  order_id   String
+  product_id String
+  quantity   Int
+  unit_price Float
+  subtotal   Float
+  note       String
+  createdAt  DateTime @map("created_at")
+  updatedAt  DateTime @map("updated_at")
+
+  order   Order   @relation(fields: [order_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@map("order_items")
+}
+
+model OrderProgress {
+  id        String   @id @default(cuid())
+  order_id  String
+  stage     String
+  data      Json
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+  Order     Order    @relation(fields: [order_id], references: [id])
+
+  @@map("order_progress")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  user_id     String
+  action      String
+  entity_type String
+  entity_id   String
+  note        String
+  createdAt   DateTime @map("created_at")
+  updatedAt   DateTime @map("updated_at")
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("activity_logs")
 }
