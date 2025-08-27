@@ -52,6 +52,7 @@ model User {
   accounts      Account[]
   Order         Order[]
   ActivityLog   ActivityLog[]
+  Customer      Customer[]
 
   @@map("users")
 }
@@ -78,8 +79,10 @@ model Customer {
   variety   String
   createdAt DateTime @map("created_at")
   updatedAt DateTime @map("updated_at")
+  create_by String
 
   region          Region            @relation(fields: [region_id], references: [id])
+  create_by_user  User              @relation(fields: [create_by], references: [id])
   CustomerHistory CustomerHistory[]
 
   @@map("customers")

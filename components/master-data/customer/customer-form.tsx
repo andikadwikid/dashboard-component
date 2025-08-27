@@ -1,8 +1,10 @@
 "use client";
 
 import * as z from "zod";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { createMasterCustomer, updateMasterCustomer } from '@/actions/master-data/customer'
+import { getMasterRegion } from '@/actions/master-data/region'
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,17 +25,29 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { MasterCustomerSchema } from "@/schema/customer";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-const regions = [
-    { label: "Sumatra", value: "sumatra" },
-    { label: "Jawa", value: "jawa" },
-    { label: "Kalimantan", value: "kalimantan" },
-    { label: "Sulawesi", value: "sulawesi" },
-]
+interface MasterCustomerFormProps {
+    mode?: 'create' | 'edit';
+    initialData?: {
+        id: string;
+        name: string;
+        farm_name: string;
+        contact: string;
+        address: string;
+        region_id: string;
+        altitude: string;
+        variety: string;
+    };
+}
 
-const MasterCustomerForm = () => {
+const MasterCustomerForm = ({ mode = 'create', initialData }: MasterCustomerFormProps) => {
+    const router = useRouter();
+
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
+    const [regions, setRegions] = useState<{ label: string; value: string }[]>([]);
 
     const [isPending, startTransition] = useTransition();
 
@@ -43,32 +57,79 @@ const MasterCustomerForm = () => {
     const form = useForm<z.infer<typeof MasterCustomerSchema>>({
         resolver: zodResolver(MasterCustomerSchema),
         defaultValues: {
-            name: "",
-            farm_name: "",
-            contact: "",
-            address: "",
-            region_id: "",
-            altitude: "",
-            variety: "",
+            name: initialData?.name || "",
+            farm_name: initialData?.farm_name || "",
+            contact: initialData?.contact || "",
+            address: initialData?.address || "",
+            region_id: initialData?.region_id || "",
+            altitude: initialData?.altitude || "",
+            variety: initialData?.variety || "",
         },
     });
+
+    useEffect(() => {
+        const loadRegions = async () => {
+            try {
+                const regionData = await getMasterRegion();
+                const formattedRegions = regionData.map(region => ({
+                    label: region.name,
+                    value: region.id
+                }));
+                setRegions(formattedRegions);
+            } catch (error) {
+                console.error('Error loading regions:', error);
+            }
+        };
+
+        loadRegions();
+    }, []);
+
+    useEffect(() => {
+        if (mode === 'edit' && initialData) {
+            form.reset({
+                name: initialData.name,
+                farm_name: initialData.farm_name,
+                contact: initialData.contact,
+                address: initialData.address,
+                region_id: initialData.region_id,
+                altitude: initialData.altitude,
+                variety: initialData.variety,
+            });
+        }
+    }, [mode, initialData, form]);
 
     const onSubmit = async (values: z.infer<typeof MasterCustomerSchema>) => {
         setError("");
         setSuccess("");
 
-        startTransition(() => {
-            // form.reset();
-            console.log(values)
-        });
+        startTransition(async () => {
+            let result;
 
+            if (mode === 'edit' && initialData?.id) {
+                result = await updateMasterCustomer(initialData.id, values);
+            } else {
+                result = await createMasterCustomer(values);
+            }
+
+            if (result?.error) {
+                setError(result.error);
+            }
+            if (result?.success) {
+                toast.success("Region berhasil diupdate")
+                // setSuccess(result.success);
+                // if (mode === 'create') {
+                //     form.reset();
+                // }
+                router.push("/admin/master-data/customer")
+            }
+        });
     };
 
     return (
         <div>
             <Card>
                 <CardHeader>
-                    <h1 className="text-lg font-medium">Master Customer</h1>
+                    <h1 className="text-lg font-medium">{mode === 'edit' ? 'Edit Customer' : 'Create Customer'}</h1>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -247,7 +308,7 @@ const MasterCustomerForm = () => {
                             <FormError message={error} />
                             <FormSuccess message={success} />
                             <Button type="submit" className="cursor-pointer" disabled={isPending}>
-                                Create Customer
+                                {mode === 'edit' ? 'Update Customer' : 'Create Customer'}
                             </Button>
                         </form>
                     </Form>
