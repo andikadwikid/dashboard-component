@@ -4,7 +4,6 @@ import * as z from "zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { RequestSampleSchema } from "@/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Form,
@@ -19,10 +18,11 @@ import { Button } from "@/components/ui/button";
 import FormError from "@/components/form-error";
 import FormSuccess from "@/components/form-success";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { MasterCustomerSchema } from "@/schema/customer";
 
 const regions = [
     { label: "Sumatra", value: "sumatra" },
@@ -31,8 +31,7 @@ const regions = [
     { label: "Sulawesi", value: "sulawesi" },
 ]
 
-
-const OrderForm = () => {
+const MasterCustomerForm = () => {
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
 
@@ -41,20 +40,20 @@ const OrderForm = () => {
     const [openRegion, setOpenRegion] = useState(false)
 
 
-    const form = useForm<z.infer<typeof RequestSampleSchema>>({
-        resolver: zodResolver(RequestSampleSchema),
+    const form = useForm<z.infer<typeof MasterCustomerSchema>>({
+        resolver: zodResolver(MasterCustomerSchema),
         defaultValues: {
-            pic_name: "",
-            pic_contact: "",
-            shipment_address: "",
-            region: "",
+            name: "",
             farm_name: "",
+            contact: "",
+            address: "",
+            region_id: "",
             altitude: "",
             variety: "",
         },
     });
 
-    const onSubmit = async (values: z.infer<typeof RequestSampleSchema>) => {
+    const onSubmit = async (values: z.infer<typeof MasterCustomerSchema>) => {
         setError("");
         setSuccess("");
 
@@ -69,7 +68,7 @@ const OrderForm = () => {
         <div>
             <Card>
                 <CardHeader>
-                    <h1 className="text-lg font-medium">Request Sample Form</h1>
+                    <h1 className="text-lg font-medium">Master Customer</h1>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -77,52 +76,14 @@ const OrderForm = () => {
                             <div className="space-y-4">
                                 <FormField
                                     control={form.control}
-                                    name="pic_name"
+                                    name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Farm PIC Name</FormLabel>
+                                            <FormLabel>Name</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     disabled={isPending}
-                                                    placeholder="Enter PIC name"
-                                                    type="text"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="pic_contact"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Farm PIC Contact</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    disabled={isPending}
-                                                    placeholder="Enter Contact PIC"
-                                                    type="text"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="shipment_address"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Shipment Address</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    disabled={isPending}
-                                                    placeholder="Enter Shipment Address"
+                                                    placeholder="Enter customer name"
                                                     type="text"
                                                     {...field}
                                                 />
@@ -141,7 +102,7 @@ const OrderForm = () => {
                                             <FormControl>
                                                 <Input
                                                     disabled={isPending}
-                                                    placeholder="Enter Farm Name"
+                                                    placeholder="Enter customer farm name"
                                                     type="text"
                                                     {...field}
                                                 />
@@ -150,6 +111,46 @@ const OrderForm = () => {
                                         </FormItem>
                                     )}
                                 />
+
+                                <FormField
+                                    control={form.control}
+                                    name="contact"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Contact</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    disabled={isPending}
+                                                    placeholder="Enter customer contact"
+                                                    type="text"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="address"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Address</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    disabled={isPending}
+                                                    placeholder="Enter customer address"
+                                                    type="text"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+
 
                                 <FormField
                                     control={form.control}
@@ -192,7 +193,7 @@ const OrderForm = () => {
 
                                 <FormField
                                     control={form.control}
-                                    name="region"
+                                    name="region_id"
                                     render={({ field }) => {
 
                                         return (
@@ -204,7 +205,7 @@ const OrderForm = () => {
                                                             <Button
                                                                 variant="outline"
                                                                 role="combobox"
-                                                                className={`w-auto justify-between ${form.formState.errors.region ? "border-red-500 ring-red-500" : ""
+                                                                className={`w-auto justify-between ${form.formState.errors.region_id ? "border-red-500 ring-red-500" : ""
                                                                     }`}
                                                             >
                                                                 {field.value
@@ -246,7 +247,7 @@ const OrderForm = () => {
                             <FormError message={error} />
                             <FormSuccess message={success} />
                             <Button type="submit" className="cursor-pointer" disabled={isPending}>
-                                Create request sample
+                                Create Customer
                             </Button>
                         </form>
                     </Form>
@@ -256,4 +257,4 @@ const OrderForm = () => {
     )
 }
 
-export default OrderForm
+export default MasterCustomerForm
