@@ -70,13 +70,14 @@ export const columns: ColumnDef<Region>[] = [
                 <div className="flex justify-end items-center gap-2">
                     <Button
                         onClick={() => redirect(`/admin/master-data/region/edit/${region.id}`)}
+                        className="cursor-pointer"
                     >
                         Edit
                     </Button>
 
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive">
+                            <Button variant="destructive" className="cursor-pointer">
                                 <span className="sr-only">Open menu</span>
                                 {/* <MoreHorizontal className="h-4 w-4" /> */}
                                 Delete

@@ -2,7 +2,7 @@
 
 import { toast } from "sonner"
 import * as z from "zod";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,10 +20,19 @@ import FormError from "@/components/form-error";
 import FormSuccess from "@/components/form-success";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MasterRegionSchema } from "@/schema/region";
-import { createMasterRegion } from "@/actions/master-data/region";
+import { createMasterRegion, updateMasterRegion } from "@/actions/master-data/region";
 import { useRouter } from "next/navigation";
 
-const MasterRegionForm = () => {
+interface MasterRegionFormProps {
+    mode?: 'create' | 'edit';
+    initialData?: {
+        id: string;
+        name: string;
+        code: string;
+    };
+}
+
+const MasterRegionForm = ({ mode = 'create', initialData }: MasterRegionFormProps) => {
     const router = useRouter();
 
     const [error, setError] = useState<string | undefined>("");
@@ -34,35 +43,54 @@ const MasterRegionForm = () => {
     const form = useForm<z.infer<typeof MasterRegionSchema>>({
         resolver: zodResolver(MasterRegionSchema),
         defaultValues: {
-            code: "",
-            name: "",
+            code: initialData?.code || "",
+            name: initialData?.name || "",
         },
     });
+
+    useEffect(() => {
+        if (mode === 'edit' && initialData) {
+            form.reset({
+                code: initialData.code,
+                name: initialData.name,
+            });
+        }
+    }, [mode, initialData, form]);
 
     const onSubmit = async (values: z.infer<typeof MasterRegionSchema>) => {
         setError("");
         setSuccess("");
 
         startTransition(() => {
-            createMasterRegion(values).then((res) => {
-                if (res.error) {
-                    setError(res.error);
-                } else {
-                    toast.success("Region berhasil ditambahkan")
-
-                    router.push("/admin/master-data/region")
-                }
-            })
-            console.log(values)
+            if (mode === 'edit' && initialData) {
+                updateMasterRegion(initialData.id, values).then((res) => {
+                    if (res.error) {
+                        setError(res.error);
+                    } else {
+                        toast.success("Region berhasil diupdate")
+                        router.push("/admin/master-data/region")
+                    }
+                })
+            } else {
+                createMasterRegion(values).then((res) => {
+                    if (res.error) {
+                        setError(res.error);
+                    } else {
+                        toast.success("Region berhasil ditambahkan")
+                        router.push("/admin/master-data/region")
+                    }
+                })
+            }
         });
-
     };
 
     return (
         <div>
             <Card>
                 <CardHeader>
-                    <h1 className="text-lg font-medium">Master Region</h1>
+                    <h1 className="text-lg font-medium">
+                        {mode === 'edit' ? 'Edit Region' : 'Create Region'}
+                    </h1>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -110,7 +138,7 @@ const MasterRegionForm = () => {
                             <FormError message={error} />
                             <FormSuccess message={success} />
                             <Button type="submit" className="cursor-pointer" disabled={isPending}>
-                                Create Region
+                                {mode === 'edit' ? 'Update Region' : 'Create Region'}
                             </Button>
                         </form>
                     </Form>

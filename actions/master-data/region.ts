@@ -43,19 +43,27 @@ export async function updateMasterRegion(
   id: string,
   values: z.infer<typeof MasterRegionSchema>
 ) {
-  const parsed = MasterRegionSchema.safeParse(values);
-  if (!parsed.success) return { error: "Invalid data" };
+  try {
+    const parsed = MasterRegionSchema.safeParse(values);
+    if (!parsed.success) {
+      return { error: "Invalid data" };
+    }
 
-  await db.region.update({
-    where: { id },
-    data: {
-      name: parsed.data.name,
-      code: parsed.data.code,
-    },
-  });
+    await db.region.update({
+      where: { id },
+      data: {
+        name: parsed.data.name,
+        code: parsed.data.code,
+        updatedAt: new Date(),
+      },
+    });
 
-  revalidatePath("/admin/master-data/region");
-  return { success: "Region updated!" };
+    revalidatePath("/admin/master-data/region");
+    return { success: "Region updated!" };
+  } catch (error) {
+    console.error("Error updating region:", error);
+    return { error: "Failed to update region" };
+  }
 }
 
 export async function deleteMasterRegion(id: string) {
