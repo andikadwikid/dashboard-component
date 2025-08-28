@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
+import { getStatusColor } from "@/lib/utils"
 
 export type Order = {
     id: string;
@@ -71,6 +73,15 @@ export const columns: ColumnDef<Order>[] = [
                 </Button>
             )
         },
+        cell: ({ row }) => {
+            const status = row.getValue("status")
+
+            return (
+                <Badge className={getStatusColor(status as string)}>
+                    {status as string}
+                </Badge>
+            )
+        }
     },
     {
         accessorKey: "customer_history.contact",
