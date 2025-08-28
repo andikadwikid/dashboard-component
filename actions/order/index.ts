@@ -146,14 +146,12 @@ export async function getOrders() {
       sales_id: session.user.id,
     },
     include: {
-      customer_history: true,
-      OrderItem: {
-        include: {
-          product: {
-            include: {
-              category: true,
-            },
-          },
+      customer_history: {
+        select: {
+          name: true,
+          contact: true,
+          region_name: true,
+          farm_name: true,
         },
       },
     },
