@@ -61,6 +61,11 @@ export const columns: ColumnDef<Order>[] = [
     },
 
     {
+        accessorKey: "customer_history.contact",
+        header: "Contact",
+    },
+
+    {
         accessorKey: "status",
         header: ({ column }) => {
             return (
@@ -83,10 +88,7 @@ export const columns: ColumnDef<Order>[] = [
             )
         }
     },
-    {
-        accessorKey: "customer_history.contact",
-        header: "Contact",
-    },
+
     {
         id: "actions",
         cell: ({ row }) => {

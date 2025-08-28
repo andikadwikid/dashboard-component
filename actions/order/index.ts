@@ -194,67 +194,57 @@ export async function getOrderById(id: string) {
   });
 }
 
-export async function updateOrder(
-  id: string,
-  values: Partial<z.infer<typeof OrderSchema>>
-) {
+
+
+
+
+export async function cancelOrder(id: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Unauthorized" };
   }
 
-  const parsed = OrderSchema.partial().safeParse(values);
-  if (!parsed.success) {
-    return { error: "Invalid data" };
-  }
-
   try {
+    // First check if order exists and belongs to the user
+    const existingOrder = await db.order.findUnique({
+      where: {
+        id,
+        sales_id: session.user.id,
+      },
+    });
+
+    if (!existingOrder) {
+      return { error: "Order not found" };
+    }
+
+    // Check if order is already cancelled
+    if (existingOrder.status === "cancelled") {
+      return { error: "Order is already cancelled" };
+    }
+
+    // Check if order is completed (cannot cancel completed orders)
+    if (existingOrder.status === "completed") {
+      return { error: "Cannot cancel completed order" };
+    }
+
+    // Update order status to cancelled
     await db.order.update({
       where: {
         id,
         sales_id: session.user.id,
       },
       data: {
-        ...parsed.data,
+        status: "cancelled",
         updatedAt: new Date(),
       },
     });
 
     revalidatePath("/admin/order");
-    return { success: "Order updated successfully!" };
+    revalidatePath(`/admin/order/detail/${id}`);
+    return { success: "Order cancelled successfully!" };
   } catch (error) {
-    console.error("Error updating order:", error);
-    return { error: "Failed to update order" };
-  }
-}
-
-export async function deleteOrder(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
-  }
-
-  try {
-    // Delete order items first
-    await db.orderItem.deleteMany({
-      where: {
-        order_id: id,
-      },
-    });
-
-    // Delete order
-    await db.order.delete({
-      where: {
-        id,
-        sales_id: session.user.id,
-      },
-    });
-
-    revalidatePath("/admin/order");
-    return { success: "Order deleted successfully!" };
-  } catch (error) {
-    console.error("Error deleting order:", error);
-    return { error: "Failed to delete order" };
+    console.error("Error cancelling order:", error);
+    return { error: "Failed to cancel order" };
   }
 }
 
