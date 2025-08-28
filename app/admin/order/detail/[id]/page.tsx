@@ -17,13 +17,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X, Package } from 'lucide-react';
 import Link from 'next/link';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { formatDate, getStatusColor } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { OrderProgressTimeline } from '@/components/order-progress/OrderProgressTimeline';
 
 interface OrderDetailPageProps {
     params: Promise<{
@@ -236,6 +237,19 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Order Progress Timeline */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Progress Order
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <OrderProgressTimeline orderId={order.id} />
+                </CardContent>
+            </Card>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">

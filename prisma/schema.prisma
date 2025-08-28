@@ -181,8 +181,8 @@ model OrderProgress {
   order_id  String
   stage     String
   data      Json
-  createdAt DateTime @map("created_at")
-  updatedAt DateTime @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   Order     Order    @relation(fields: [order_id], references: [id])
 
   @@map("order_progress")
