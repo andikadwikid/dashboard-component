@@ -174,6 +174,13 @@ export async function getOrderById(id: string) {
     },
     include: {
       customer_history: true,
+      sales: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
       OrderItem: {
         include: {
           product: {

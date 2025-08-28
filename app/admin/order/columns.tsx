@@ -83,7 +83,7 @@ export const columns: ColumnDef<Order>[] = [
 
             return (
                 <div className="flex justify-end items-center gap-2">
-                    <Link href={`/admin/master-data/order/detail/${order.id}`}>
+                    <Link href={`/admin/order/detail/${order.id}`}>
                         <Button variant="outline" size="sm" className="cursor-pointer">
                             <Eye className="h-4 w-4 mr-1" />
                             Detail
