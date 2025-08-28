@@ -4,6 +4,7 @@ import { getOrders } from "@/actions/order";
 
 export default async function CustomerMaster() {
     const data: Order[] = await getOrders();
+
     return (
         <div>
             <div className="mb-8 px-4 py-2 bg-secondary rounded-md">

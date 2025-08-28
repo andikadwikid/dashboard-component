@@ -11,6 +11,7 @@ import Link from "next/link"
 
 export type Order = {
     id: string;
+    status: string;
     customer_history: {
         name: string;
         contact: string;
@@ -54,13 +55,18 @@ export const columns: ColumnDef<Order>[] = [
 
     {
         accessorKey: "customer_history.region_name",
+        header: "Region",
+    },
+
+    {
+        accessorKey: "status",
         header: ({ column }) => {
             return (
                 <Button
-                    variant="ghost"
+                    variant="ghost" className="cursor-pointer"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Region
+                    Status
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             )
