@@ -9,13 +9,14 @@ import { ArrowLeft, Edit, MapPin, Phone, User, Building, Mountain, Leaf } from '
 import { Separator } from '@/components/ui/separator';
 
 interface CustomerDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const CustomerDetailPage = async ({ params }: CustomerDetailPageProps) => {
-  const customer = await getMasterCustomerById(params.id);
+  const { id } = await params;
+  const customer = await getMasterCustomerById(id);
 
   if (!customer) {
     notFound();

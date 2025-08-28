@@ -42,12 +42,14 @@ const LoginForm = () => {
         startTransition(() => {
             // form.reset();
             login(values).then((res) => {
-                if (res.error) {
+                if (res?.error) {
                     setError(res.error);
                 } else {
-                    setSuccess(res.success);
+                    setSuccess("Login successful!");
                 }
-            })
+            }).catch(() => {
+                setError("Something went wrong!");
+            });
         });
 
     };

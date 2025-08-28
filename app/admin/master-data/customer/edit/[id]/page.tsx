@@ -4,13 +4,14 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 
 interface EditCustomerPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 const EditCustomerPage = async ({ params }: EditCustomerPageProps) => {
-  const customer = await getMasterCustomerById(params.id);
+  const { id } = await params;
+  const customer = await getMasterCustomerById(id);
 
   if (!customer) {
     notFound();

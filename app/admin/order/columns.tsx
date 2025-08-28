@@ -1,30 +1,25 @@
 "use client"
 
-import { cn } from "@/lib/utils"
 import { ColumnDef } from "@tanstack/react-table"
 
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Checkbox } from "@/components/ui/checkbox"
+import { deleteMasterRegion } from "@/actions/master-data/region"
+import { redirect } from "next/navigation"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-export type Payment = {
-    id: string
-    amount: number
-    username: string
-    email: string
-    status: "pending" | "processing" | "success" | "failed"
-}
+export type Region = {
+    id: string;
+    name: string;
+    code: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Region>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -48,77 +43,65 @@ export const columns: ColumnDef<Payment>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: "username",
-        header: "Username",
+        accessorKey: "code",
+        header: "Code",
     },
     {
-        accessorKey: "email",
+        accessorKey: "name",
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Email
+                    Name
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             )
         },
     },
-    {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-            const status = row.getValue("status")
 
-            return (
-                <div className={cn("p-1 rounded-md w-max text-xs font-medium",
-                    status === "pending" && "bg-yellow-500/40",
-                    status === "success" && "bg-green-500/40",
-                    status === "failed" && "bg-red-500/40")}>
-                    {status as string}
-                </div>
-            )
-        }
-    },
-    {
-        accessorKey: "amount",
-        header: () => <div className="text-right">Amount</div>,
-        cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("amount"))
-            const formatted = new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-            }).format(amount)
-
-            return <div className="text-right font-medium">{formatted}</div>
-        },
-    },
     {
         id: "actions",
         cell: ({ row }) => {
-            const payment = row.original
+            const region = row.original
 
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(payment.id)}
-                        >
-                            Copy payment ID
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>View payment details</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end items-center gap-2">
+                    <Button
+                        onClick={() => redirect(`/admin/master-data/region/edit/${region.id}`)}
+                        className="cursor-pointer"
+                    >
+                        Edit
+                    </Button>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="cursor-pointer">
+                                <span className="sr-only">Open menu</span>
+                                {/* <MoreHorizontal className="h-4 w-4" /> */}
+                                Delete
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this region.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={() => deleteMasterRegion(region.id)}
+                                >
+                                    Confirm
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
+                </div>
             )
         },
     },

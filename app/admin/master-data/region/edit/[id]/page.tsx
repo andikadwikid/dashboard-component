@@ -4,13 +4,14 @@ import { notFound } from 'next/navigation'
 import React from 'react'
 
 interface EditMasterRegionProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 const EditMasterRegion = async ({ params }: EditMasterRegionProps) => {
-    const region = await getMasterRegionById(params.id);
+    const { id } = await params;
+    const region = await getMasterRegionById(id);
     
     if (!region) {
         notFound();

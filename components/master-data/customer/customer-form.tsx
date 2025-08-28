@@ -40,9 +40,11 @@ interface MasterCustomerFormProps {
         altitude: string;
         variety: string;
     };
+    onSuccess?: () => void;
+    showCard?: boolean;
 }
 
-const MasterCustomerForm = ({ mode = 'create', initialData }: MasterCustomerFormProps) => {
+const MasterCustomerForm = ({ mode = 'create', initialData, onSuccess, showCard = true }: MasterCustomerFormProps) => {
     const router = useRouter();
 
     const [error, setError] = useState<string | undefined>("");
@@ -115,25 +117,22 @@ const MasterCustomerForm = ({ mode = 'create', initialData }: MasterCustomerForm
                 setError(result.error);
             }
             if (result?.success) {
-                toast.success("Region berhasil diupdate")
-                // setSuccess(result.success);
-                // if (mode === 'create') {
-                //     form.reset();
-                // }
-                router.push("/admin/master-data/customer")
+                toast.success(mode === 'edit' ? "Customer berhasil diupdate" : "Customer berhasil dibuat")
+                if (onSuccess) {
+                    onSuccess();
+                } else {
+                    router.push("/admin/master-data/customer")
+                }
+                if (mode === 'create') {
+                    form.reset();
+                }
             }
         });
     };
 
-    return (
-        <div>
-            <Card>
-                <CardHeader>
-                    <h1 className="text-lg font-medium">{mode === 'edit' ? 'Edit Customer' : 'Create Customer'}</h1>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    const formContent = (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             <div className="space-y-4">
                                 <FormField
                                     control={form.control}
@@ -305,13 +304,27 @@ const MasterCustomerForm = ({ mode = 'create', initialData }: MasterCustomerForm
 
 
                             </div>
-                            <FormError message={error} />
-                            <FormSuccess message={success} />
-                            <Button type="submit" className="cursor-pointer" disabled={isPending}>
-                                {mode === 'edit' ? 'Update Customer' : 'Create Customer'}
-                            </Button>
-                        </form>
-                    </Form>
+                        <FormError message={error} />
+                        <FormSuccess message={success} />
+                        <Button type="submit" className="cursor-pointer" disabled={isPending}>
+                            {mode === 'edit' ? 'Update Customer' : 'Create Customer'}
+                        </Button>
+                    </form>
+                </Form>
+    );
+
+    if (!showCard) {
+        return <div>{formContent}</div>;
+    }
+
+    return (
+        <div>
+            <Card>
+                <CardHeader>
+                    <h1 className="text-lg font-medium">{mode === 'edit' ? 'Edit Customer' : 'Create Customer'}</h1>
+                </CardHeader>
+                <CardContent>
+                    {formContent}
                 </CardContent>
             </Card>
         </div>

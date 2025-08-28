@@ -44,3 +44,27 @@ export const RequestSampleSchema = z.object({
     message: "Variety is required",
   }),
 });
+
+export const OrderSchema = z.object({
+  pic_name: z.string().min(1, {
+    message: "PIC name is required",
+  }),
+  pic_contact: z.string().min(1, {
+    message: "PIC contact is required",
+  }),
+  shipment_address: z.string().min(1, {
+    message: "Shipment address is required",
+  }),
+  region: z.string().min(1, {
+    message: "Region is required",
+  }),
+  farm_name: z.string().min(1, {
+    message: "Farm name is required",
+  }),
+  altitude: z.string().min(1, {
+    message: "Altitude is required",
+  }),
+  variety: z.string().min(1, {
+    message: "Variety is required",
+  }),
+});
