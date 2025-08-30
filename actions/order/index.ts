@@ -194,10 +194,6 @@ export async function getOrderById(id: string) {
   });
 }
 
-
-
-
-
 export async function cancelOrder(id: string) {
   const session = await auth();
   if (!session?.user?.id) {

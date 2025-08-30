@@ -17,14 +17,14 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X, Package } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X } from 'lucide-react';
 import Link from 'next/link';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { formatDate, getStatusColor } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { OrderProgressTimeline } from '@/components/order-progress/OrderProgressTimeline';
+import { OrderProgressManager } from '@/components/order-progress/OrderProgressManager';
 
 interface OrderDetailPageProps {
     params: Promise<{
@@ -38,12 +38,30 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
+    const [orderId, setOrderId] = useState<string | null>(null);
 
+    // Resolve params once and store the ID
     React.useEffect(() => {
-        const loadOrder = async () => {
+        const resolveParams = async () => {
             try {
                 const resolvedParams = await params;
-                const orderData = await getOrderById(resolvedParams.id);
+                setOrderId(resolvedParams.id);
+            } catch (error) {
+                console.error('Error resolving params:', error);
+                toast.error('Invalid order ID');
+            }
+        };
+        resolveParams();
+    }, [params]);
+
+    // Load order data when orderId is available
+    React.useEffect(() => {
+        if (!orderId) return;
+
+        const loadOrder = async () => {
+            try {
+                setLoading(true);
+                const orderData = await getOrderById(orderId);
                 if (!orderData) {
                     notFound();
                 }
@@ -56,7 +74,7 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
             }
         };
         loadOrder();
-    }, [params]);
+    }, [orderId]);
 
     const handleCancelOrder = async () => {
         if (!order) return;
@@ -131,10 +149,12 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Order ID</label>
-                                <p className="font-mono text-sm">{order.id}</p>
-                            </div>
+                            {order.sales && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground">Sales</label>
+                                    <p className="text-sm">{order.sales.name}</p>
+                                </div>
+                            )}
                             <div>
                                 <label className="text-sm font-medium text-muted-foreground">Status</label>
                                 <div className="mt-1">
@@ -153,12 +173,7 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                             </div>
                         </div>
 
-                        {order.sales && (
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Sales</label>
-                                <p className="text-sm">{order.sales.name}</p>
-                            </div>
-                        )}
+
                     </CardContent>
                 </Card>
 
@@ -185,7 +200,7 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                                     <div>
                                         <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <Phone className="h-4 w-4" />
-                                            Kontak
+                                            Contact
                                         </label>
                                         <p className="text-sm">{order.customer_history.contact}</p>
                                     </div>
@@ -193,7 +208,7 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                                     <div>
                                         <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <Building className="h-4 w-4" />
-                                            Nama Peternakan
+                                            Farm Name
                                         </label>
                                         <p className="text-sm">{order.customer_history.farm_name}</p>
                                     </div>
@@ -238,18 +253,8 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
                 </Card>
             </div>
 
-            {/* Order Progress Timeline */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5" />
-                        Progress Order
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <OrderProgressTimeline orderId={order.id} />
-                </CardContent>
-            </Card>
+            {/* Order Progress Section */}
+            <OrderProgressManager orderId={order.id} />
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">

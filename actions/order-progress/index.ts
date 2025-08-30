@@ -1,47 +1,86 @@
 "use server";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Order Progress Actions
+ * 
+ * Modul ini berisi semua server actions untuk mengelola progres pesanan.
+ * Fitur ini memungkinkan tracking progres pesanan melalui 4 tahapan:
+ * 1. Warehouse (Gudang) - Input data gudang dan status
+ * 2. Shipping (Pengiriman) - Input data pengiriman dan status
+ * 3. Applied (Aplikasi) - Input estimasi area aplikasi
+ * 4. Result (Hasil) - Input hasil yield
+ * 
+ * Dependencies:
+ * - @/lib/db: Database connection menggunakan Prisma
+ * - next/cache: Untuk revalidasi cache Next.js
+ * - @prisma/client: Type definitions untuk Prisma
+ * - @/schema/order-progress: Validation schemas menggunakan Zod
+ */
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import {
   OrderProgressSchema,
-  UpdateOrderProgressSchema,
-  validateStageData,
-  type OrderProgressType,
-  type UpdateOrderProgressType,
+  WarehouseProgressSchema,
+  ShippingProgressSchema,
+  AppliedProgressSchema,
+  ResultProgressSchema,
+  type ProgressStage,
 } from "@/schema/order-progress";
 
-// Create new order progress
-export async function createOrderProgress(data: OrderProgressType) {
+/**
+ * Membuat progres pesanan baru untuk tahapan tertentu
+ * 
+ * @param formData - FormData yang berisi:
+ *   - order_id: ID pesanan (string)
+ *   - stage: Tahapan progres ("warehouse" | "shipping" | "applied" | "result")
+ *   - data: Data JSON sesuai dengan tahapan (string yang akan di-parse)
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   data?: OrderProgress;
+ *   message?: string;
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const formData = new FormData();
+ * formData.append("order_id", "order-123");
+ * formData.append("stage", "warehouse");
+ * formData.append("data", JSON.stringify({ status: true, notes: "Ready" }));
+ * 
+ * const result = await createOrderProgress(formData);
+ * if (result.success) {
+ *   console.log("Progress created:", result.data);
+ * }
+ */
+export async function createOrderProgress(formData: FormData) {
   try {
-    // Validate input data
-    const validatedData = OrderProgressSchema.parse(data);
+    const rawData = {
+      order_id: formData.get("order_id") as string,
+      stage: formData.get("stage") as ProgressStage,
+      data: JSON.parse(formData.get("data") as string),
+    };
 
-    // Validate stage-specific data
-    const stageValidation = validateStageData(
-      validatedData.stage,
-      validatedData.data
-    );
-
-    if (!stageValidation.success) {
-      return {
-        success: false,
-        message: "Invalid data for stage",
-        error: stageValidation.error,
-      };
-    }
-
-    // Check if order exists
-    const order = await db.order.findUnique({
-      where: { id: validatedData.order_id },
-    });
-
-    if (!order) {
-      return {
-        success: false,
-        message: "Order not found",
-      };
+    // Validate based on stage
+    let validatedData;
+    switch (rawData.stage) {
+      case "warehouse":
+        validatedData = WarehouseProgressSchema.parse(rawData);
+        break;
+      case "shipping":
+        validatedData = ShippingProgressSchema.parse(rawData);
+        break;
+      case "applied":
+        validatedData = AppliedProgressSchema.parse(rawData);
+        break;
+      case "result":
+        validatedData = ResultProgressSchema.parse(rawData);
+        break;
+      default:
+        throw new Error("Invalid stage");
     }
 
     // Check if progress for this stage already exists
@@ -53,18 +92,18 @@ export async function createOrderProgress(data: OrderProgressType) {
     });
 
     if (existingProgress) {
-      return {
-        success: false,
-        message: `Progress for ${validatedData.stage} stage already exists`,
-      };
+      throw new Error(
+        `Progress for ${validatedData.stage} stage already exists`
+      );
     }
 
-    // Create order progress
+    // Create new progress
     const orderProgress = await db.orderProgress.create({
       data: {
         order_id: validatedData.order_id,
         stage: validatedData.stage,
-        data: validatedData.data as any,
+        data: validatedData.data as Prisma.InputJsonValue,
+        createdAt: new Date(),
       },
     });
 
@@ -73,119 +112,159 @@ export async function createOrderProgress(data: OrderProgressType) {
 
     return {
       success: true,
-      message: "Order progress created successfully",
       data: orderProgress,
+      message: `${validatedData.stage} progress created successfully`,
     };
   } catch (error) {
     console.error("Error creating order progress:", error);
     return {
       success: false,
-      message: "Failed to create order progress",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error ? error.message : "Failed to create progress",
     };
   }
 }
 
-// Update existing order progress
-export async function updateOrderProgress(data: UpdateOrderProgressType) {
+/**
+ * Memperbarui progres pesanan yang sudah ada
+ * 
+ * @param id - ID progres yang akan diupdate (string)
+ * @param formData - FormData yang berisi:
+ *   - order_id: ID pesanan (string)
+ *   - stage: Tahapan progres (string)
+ *   - data: Data JSON yang diperbarui (string)
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   data?: OrderProgress;
+ *   message?: string;
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const formData = new FormData();
+ * formData.append("order_id", "order-123");
+ * formData.append("stage", "warehouse");
+ * formData.append("data", JSON.stringify({ status: true, notes: "Updated" }));
+ * 
+ * const result = await updateOrderProgress("progress-id", formData);
+ */
+export async function updateOrderProgress(id: string, formData: FormData) {
   try {
-    // Validate input data
-    const validatedData = UpdateOrderProgressSchema.parse(data);
+    const rawData = {
+      order_id: formData.get("order_id") as string,
+      stage: formData.get("stage") as ProgressStage,
+      data: JSON.parse(formData.get("data") as string),
+    };
 
-    // Get existing progress to validate stage
-    const existingProgress = await db.orderProgress.findUnique({
-      where: { id: validatedData.id },
-    });
-
-    if (!existingProgress) {
-      return {
-        success: false,
-        message: "Order progress not found",
-      };
+    // Validate based on stage
+    let validatedData;
+    switch (rawData.stage) {
+      case "warehouse":
+        validatedData = WarehouseProgressSchema.parse(rawData);
+        break;
+      case "shipping":
+        validatedData = ShippingProgressSchema.parse(rawData);
+        break;
+      case "applied":
+        validatedData = AppliedProgressSchema.parse(rawData);
+        break;
+      case "result":
+        validatedData = ResultProgressSchema.parse(rawData);
+        break;
+      default:
+        throw new Error("Invalid stage");
     }
 
-    // Validate stage-specific data
-    const stageValidation = validateStageData(
-      existingProgress.stage,
-      validatedData.data
-    );
-
-    if (!stageValidation.success) {
-      return {
-        success: false,
-        message: "Invalid data for stage",
-        error: stageValidation.error,
-      };
-    }
-
-    // Update order progress
-    const updatedProgress = await db.orderProgress.update({
-      where: { id: validatedData.id },
+    // Update progress
+    const orderProgress = await db.orderProgress.update({
+      where: { id },
       data: {
-        data: validatedData.data as any,
+        data: validatedData.data as Prisma.InputJsonValue,
+        updatedAt: new Date(),
       },
     });
 
     revalidatePath("/admin/order");
-    revalidatePath(`/admin/order/detail/${existingProgress.order_id}`);
+    revalidatePath(`/admin/order/detail/${validatedData.order_id}`);
 
     return {
       success: true,
-      message: "Order progress updated successfully",
-      data: updatedProgress,
+      data: orderProgress,
+      message: `${validatedData.stage} progress updated successfully`,
     };
   } catch (error) {
     console.error("Error updating order progress:", error);
     return {
       success: false,
-      message: "Failed to update order progress",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error ? error.message : "Failed to update progress",
     };
   }
 }
 
-// Get all progress for an order
-export async function getOrderProgress(orderId: string) {
+/**
+ * Mengambil semua progres pesanan berdasarkan ID pesanan
+ * 
+ * @param orderId - ID pesanan (string)
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   data?: OrderProgress[];
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const result = await getOrderProgressByOrderId("order-123");
+ * if (result.success) {
+ *   console.log("All progress:", result.data);
+ * }
+ */
+export async function getOrderProgressByOrderId(orderId: string) {
   try {
-    if (!orderId) {
-      return {
-        success: false,
-        message: "Order ID is required",
-      };
-    }
-
-    const progressList = await db.orderProgress.findMany({
-      where: { order_id: orderId },
-      orderBy: { createdAt: "asc" },
+    const orderProgress = await db.orderProgress.findMany({
+      where: {
+        order_id: orderId,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
     return {
       success: true,
-      data: progressList,
+      data: orderProgress,
     };
   } catch (error) {
-    console.error("Error getting order progress:", error);
+    console.error("Error fetching order progress:", error);
     return {
       success: false,
-      message: "Failed to get order progress",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch progress",
     };
   }
 }
 
-// Get specific progress by stage
-export async function getOrderProgressByStage(
-  orderId: string,
-  stage: string
-) {
+/**
+ * Mengambil progres untuk tahapan tertentu dari pesanan
+ * 
+ * @param orderId - ID pesanan (string)
+ * @param stage - Tahapan yang dicari ("warehouse" | "shipping" | "applied" | "result")
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   data?: OrderProgress | null;
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const result = await getStageProgress("order-123", "warehouse");
+ * if (result.success && result.data) {
+ *   console.log("Warehouse progress:", result.data);
+ * }
+ */
+export async function getStageProgress(orderId: string, stage: ProgressStage) {
   try {
-    if (!orderId || !stage) {
-      return {
-        success: false,
-        message: "Order ID and stage are required",
-      };
-    }
-
     const progress = await db.orderProgress.findFirst({
       where: {
         order_id: orderId,
@@ -198,53 +277,154 @@ export async function getOrderProgressByStage(
       data: progress,
     };
   } catch (error) {
-    console.error("Error getting order progress by stage:", error);
+    console.error("Error fetching stage progress:", error);
     return {
       success: false,
-      message: "Failed to get order progress",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch stage progress",
     };
   }
 }
 
-// Delete order progress (optional, for admin purposes)
-export async function deleteOrderProgress(progressId: string) {
+/**
+ * Menghapus progres pesanan berdasarkan ID
+ * 
+ * @param id - ID progres yang akan dihapus (string)
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   message?: string;
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const result = await deleteOrderProgress("progress-id");
+ * if (result.success) {
+ *   console.log("Progress deleted successfully");
+ * }
+ */
+export async function deleteOrderProgress(id: string) {
   try {
-    if (!progressId) {
-      return {
-        success: false,
-        message: "Progress ID is required",
-      };
-    }
-
-    const existingProgress = await db.orderProgress.findUnique({
-      where: { id: progressId },
+    const progress = await db.orderProgress.findUnique({
+      where: { id },
     });
 
-    if (!existingProgress) {
-      return {
-        success: false,
-        message: "Order progress not found",
-      };
+    if (!progress) {
+      throw new Error("Progress not found");
     }
 
     await db.orderProgress.delete({
-      where: { id: progressId },
+      where: { id },
     });
 
     revalidatePath("/admin/order");
-    revalidatePath(`/admin/order/detail/${existingProgress.order_id}`);
+    revalidatePath(`/admin/order/detail/${progress.order_id}`);
 
     return {
       success: true,
-      message: "Order progress deleted successfully",
+      message: "Progress deleted successfully",
     };
   } catch (error) {
     console.error("Error deleting order progress:", error);
     return {
       success: false,
-      message: "Failed to delete order progress",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error:
+        error instanceof Error ? error.message : "Failed to delete progress",
+    };
+  }
+}
+
+/**
+ * Mengambil status lengkap semua tahapan progres untuk pesanan tertentu
+ * 
+ * Fungsi ini mengembalikan status completed untuk setiap tahapan berdasarkan:
+ * - Warehouse & Shipping: status === true
+ * - Applied: est_applied_area > 0
+ * - Result: yield_result exists
+ * 
+ * @param orderId - ID pesanan (string)
+ * 
+ * @returns Promise<{
+ *   success: boolean;
+ *   data?: Array<{
+ *     stage: string;
+ *     completed: boolean;
+ *     data: any | null;
+ *     createdAt: Date | null;
+ *     updatedAt: Date | null;
+ *   }>;
+ *   error?: string;
+ * }>
+ * 
+ * @example
+ * const result = await getProgressStagesStatus("order-123");
+ * if (result.success) {
+ *   result.data?.forEach(stage => {
+ *     console.log(`${stage.stage}: ${stage.completed ? 'Completed' : 'Pending'}`);
+ *   });
+ * }
+ */
+export async function getProgressStagesStatus(orderId: string) {
+  try {
+    const allProgress = await db.orderProgress.findMany({
+      where: {
+        order_id: orderId,
+      },
+    });
+
+    const stages = ["warehouse", "shipping", "applied", "result"] as const;
+    const stagesStatus = stages.map((stage) => {
+      const progress = allProgress.find((p) => p.stage === stage);
+
+      let completed = false;
+      if (progress) {
+        const data = progress.data as Record<string, unknown>;
+
+        switch (stage) {
+          case "warehouse":
+          case "shipping":
+            // For warehouse and shipping, check if status is true
+            completed =
+              typeof data?.status === "boolean" && data.status === true;
+            break;
+          case "applied":
+            // For applied, check if est_applied_area exists and is positive
+            completed =
+              typeof data?.est_applied_area === "number" &&
+              data.est_applied_area > 0;
+            break;
+          case "result":
+            // For result, check if yield_result exists
+            completed = !!data?.yield_result;
+            break;
+          default:
+            completed = false;
+        }
+      }
+
+      return {
+        stage,
+        completed,
+        data: progress?.data || null,
+        createdAt: progress?.createdAt || null,
+        updatedAt: progress?.updatedAt || null,
+      };
+    });
+
+    return {
+      success: true,
+      data: stagesStatus,
+    };
+  } catch (error) {
+    console.error("Error fetching progress stages status:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch stages status",
     };
   }
 }

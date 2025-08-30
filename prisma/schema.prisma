@@ -134,6 +134,7 @@ model Category {
 
 enum OrderStatus {
   pending
+  warehouse
   shipped
   delivered
   closed
@@ -177,26 +178,26 @@ model OrderItem {
 }
 
 model OrderProgress {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   order_id  String
   stage     String
   data      Json
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  Order     Order    @relation(fields: [order_id], references: [id])
+  createdAt DateTime  @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+  Order     Order     @relation(fields: [order_id], references: [id])
 
   @@map("order_progress")
 }
 
 model ActivityLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   user_id     String
   action      String
   entity_type String
   entity_id   String
   note        String
-  createdAt   DateTime @map("created_at")
-  updatedAt   DateTime @map("updated_at")
+  createdAt   DateTime  @map("created_at")
+  updatedAt   DateTime? @map("updated_at")
 
   user User @relation(fields: [user_id], references: [id])
 
