@@ -60,6 +60,8 @@ interface WarehouseProgressFormProps {
   } | null;
   /** Callback yang dipanggil setelah berhasil submit */
   onSuccess?: () => void;
+  /** Status order untuk menentukan apakah form dapat diakses */
+  orderStatus?: string;
 }
 
 /**
@@ -73,6 +75,7 @@ export function WarehouseProgressForm({
   orderId,
   existingData,
   onSuccess,
+  orderStatus,
 }: WarehouseProgressFormProps) {
   // State untuk loading indicator
   const [isLoading, setIsLoading] = useState(false);
@@ -144,7 +147,7 @@ export function WarehouseProgressForm({
                     <Select
                       value={field.value ? "yes" : "no"}
                       onValueChange={(value) => field.onChange(value === "yes")}
-                      disabled={isLoading}
+                      disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select status" />
@@ -161,7 +164,7 @@ export function WarehouseProgressForm({
             />
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingData ? "Update" : "Save"} Warehouse Status
               </Button>

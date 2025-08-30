@@ -39,6 +39,10 @@ import { toast } from "sonner";
 interface OrderProgressManagerProps {
   /** ID pesanan yang akan dikelola progresnya */
   orderId: string;
+  /** Status order untuk menentukan apakah form dapat diakses */
+  orderStatus?: string;
+  /** Callback yang dipanggil ketika progress berhasil diupdate */
+  onProgressUpdate?: () => void;
 }
 
 /**
@@ -67,7 +71,7 @@ interface StageStatus {
   shipping: boolean;
   /** Status applied - true jika data.est_applied_area > 0 */
   applied: boolean;
-  /** Status result - true jika data.yield_result exists */
+  /** Status result - true jika data.status = true */
   result: boolean;
 }
 
@@ -76,7 +80,7 @@ interface StageStatus {
  * 
  * @param orderId - ID pesanan yang akan dikelola progresnya
  */
-export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
+export function OrderProgressManager({ orderId, orderStatus, onProgressUpdate }: OrderProgressManagerProps) {
   // State untuk menyimpan data progres dari database
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   
@@ -136,6 +140,17 @@ export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
   useEffect(() => {
     fetchProgressData();
   }, [orderId, fetchProgressData]);
+
+  /**
+   * Callback yang dipanggil ketika progress berhasil dibuat/diupdate
+   * Akan refresh data progress dan memanggil callback parent jika ada
+   */
+  const handleProgressSuccess = useCallback(async () => {
+    await fetchProgressData();
+    if (onProgressUpdate) {
+      onProgressUpdate();
+    }
+  }, [fetchProgressData, onProgressUpdate]);
 
   /**
    * Mengambil data progres untuk tahapan tertentu
@@ -300,7 +315,8 @@ export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
           <WarehouseProgressForm
             orderId={orderId}
             existingData={getStageData("warehouse") as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-            onSuccess={fetchProgressData}
+            onSuccess={handleProgressSuccess}
+            orderStatus={orderStatus}
           />
         </div>
 
@@ -321,7 +337,8 @@ export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
           <ShippingProgressForm
             orderId={orderId}
             existingData={getStageData("shipping") as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-            onSuccess={fetchProgressData}
+            onSuccess={handleProgressSuccess}
+            orderStatus={orderStatus}
           />
         </div>
 
@@ -342,7 +359,8 @@ export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
           <AppliedProgressForm
             orderId={orderId}
             existingData={getStageData("applied") as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-            onSuccess={fetchProgressData}
+            onSuccess={handleProgressSuccess}
+            orderStatus={orderStatus}
           />
         </div>
 
@@ -363,7 +381,8 @@ export function OrderProgressManager({ orderId }: OrderProgressManagerProps) {
           <ResultProgressForm
             orderId={orderId}
             existingData={getStageData("result") as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-            onSuccess={fetchProgressData}
+            onSuccess={handleProgressSuccess}
+            orderStatus={orderStatus}
           />
         </div>
       </div>

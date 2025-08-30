@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { notFound } from 'next/navigation';
-import { getOrderById, cancelOrder } from '@/actions/order';
+import { getOrderById, cancelOrder, completeOrder } from '@/actions/order';
+import { getProgressStagesStatus } from '@/actions/order-progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Phone, Building, Mountain, Leaf, X, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -38,7 +39,9 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [cancelling, setCancelling] = useState(false);
+    const [completing, setCompleting] = useState(false);
     const [orderId, setOrderId] = useState<string | null>(null);
+    const [isResultCompleted, setIsResultCompleted] = useState(false);
 
     // Resolve params once and store the ID
     React.useEffect(() => {
@@ -76,6 +79,38 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
         loadOrder();
     }, [orderId]);
 
+    // Function to refresh order data
+    const refreshOrderData = React.useCallback(async () => {
+        if (!orderId) return;
+        
+        try {
+            const orderData = await getOrderById(orderId);
+            if (orderData) {
+                setOrder(orderData);
+            }
+        } catch (error) {
+            console.error('Error refreshing order data:', error);
+        }
+    }, [orderId]);
+
+    // Check if result stage is completed
+    React.useEffect(() => {
+        const checkResultStatus = async () => {
+            if (!order) return;
+
+            try {
+                const progressStatus = await getProgressStagesStatus(order.id);
+                if (progressStatus.success && progressStatus.data) {
+                    const resultStage = progressStatus.data.find(stage => stage.stage === 'result');
+                    setIsResultCompleted(resultStage?.completed || false);
+                }
+            } catch (error) {
+                console.error('Error checking progress status:', error);
+            }
+        };
+        checkResultStatus();
+    }, [order]);
+
     const handleCancelOrder = async () => {
         if (!order) return;
 
@@ -97,6 +132,30 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
             toast.error('Failed to cancel order');
         } finally {
             setCancelling(false);
+        }
+    };
+
+    const handleCompleteOrder = async () => {
+        if (!order) return;
+
+        setCompleting(true);
+        try {
+            const result = await completeOrder(order.id);
+            if (result.success) {
+                toast.success(result.success);
+                // Refresh order data
+                const updatedOrder = await getOrderById(order.id);
+                if (updatedOrder) {
+                    setOrder(updatedOrder);
+                }
+            } else {
+                toast.error(result.error || 'Failed to complete order');
+            }
+        } catch (error) {
+            console.error('Error completing order:', error);
+            toast.error('Failed to complete order');
+        } finally {
+            setCompleting(false);
         }
     };
 
@@ -254,12 +313,41 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
             </div>
 
             {/* Order Progress Section */}
-            <OrderProgressManager orderId={order.id} />
+            <OrderProgressManager orderId={order.id} orderStatus={order?.status} onProgressUpdate={refreshOrderData} />
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">
-                {/* Cancel Order Button - Only show if order is pending or processing */}
-                {(order.status === 'pending' || order.status === 'processing') && (
+                {/* Complete Order Button - Only show if result stage is completed and order is not completed or cancelled */}
+                {isResultCompleted && order.status !== 'completed' && order.status !== 'cancelled' && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="default" disabled={completing} className='cursor-pointer'>
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {completing ? 'Completing...' : 'Complete Order'}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Complete Order</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Are you sure you want to mark this order as completed? This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleCompleteOrder}
+                                    className="bg-green-600 hover:bg-green-700 cursor-pointer"
+                                >
+                                    Yes, Complete Order
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+
+                {/* Cancel Order Button - Only show if order is pending or processing and not completed */}
+                {order.status !== 'completed' && (
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive" disabled={cancelling} className='cursor-pointer'>

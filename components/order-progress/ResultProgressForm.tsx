@@ -5,8 +5,8 @@
  * 
  * Komponen form untuk mengelola progres tahapan hasil (result) dalam sistem order progress.
  * Form ini memungkinkan pengguna untuk:
- * - Input hasil yield (gain atau no_gain)
- * - Input jumlah yield jika hasilnya gain
+ * - Input status yield (true untuk gain, false untuk no gain)
+ * - Input jumlah yield jika status true (gain)
  * - Menyimpan atau memperbarui data progres result
  * 
  * Fitur:
@@ -15,14 +15,14 @@
  * - Loading state dengan spinner
  * - Toast notifications untuk feedback
  * - Conditional field untuk yield_amount
- * - Select dropdown untuk yield_result
+ * - Checkbox untuk status yield
  * 
  * Data yang disimpan:
- * - yield_result: "gain" | "no_gain" - Hasil yield
- * - yield_amount: number - Jumlah yield (optional, hanya jika gain)
+ * - status: boolean - Status yield (true untuk gain, false untuk no gain)
+ * - yield_amount: number - Jumlah yield (optional, hanya jika status true)
  * 
  * Kondisi Completed:
- * - Tahapan ini dianggap selesai jika yield_result ada (tidak null/undefined)
+ * - Tahapan ini dianggap selesai jika status = true
  */
 
 import { useState } from "react";
@@ -38,13 +38,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { createOrderProgress, updateOrderProgress } from "@/actions/order-progress";
@@ -59,7 +53,7 @@ import { Loader2, BarChart3 } from "lucide-react";
  * @property {Object|null} [existingData] - Data progres result yang sudah ada (untuk mode edit)
  * @property {string} existingData.id - ID record progres yang sudah ada
  * @property {Object} existingData.data - Data progres result
- * @property {"gain"|"no_gain"} existingData.data.yield_result - Hasil yield
+ * @property {boolean} existingData.data.status - Status yield (true untuk gain, false untuk no gain)
  * @property {number} [existingData.data.yield_amount] - Jumlah yield (jika gain)
  * @property {Function} [onSuccess] - Callback function yang dipanggil setelah berhasil menyimpan
  */
@@ -68,11 +62,13 @@ interface ResultProgressFormProps {
   existingData?: {
     id: string;
     data: {
-      yield_result: "gain" | "no_gain";
+      status: boolean;
       yield_amount?: number;
     };
   } | null;
   onSuccess?: () => void;
+  // Status order untuk disable form jika cancelled
+  orderStatus?: string;
 }
 
 /**
@@ -97,7 +93,7 @@ interface ResultProgressFormProps {
  *   existingData={{
  *     id: "progress-456",
  *     data: {
- *       yield_result: "gain",
+ *       status: true,
  *       yield_amount: 75.5
  *     }
  *   }}
@@ -109,6 +105,7 @@ export function ResultProgressForm({
   orderId,
   existingData,
   onSuccess,
+  orderStatus,
 }: ResultProgressFormProps) {
   // State untuk loading indicator
   const [isLoading, setIsLoading] = useState(false);
@@ -120,19 +117,19 @@ export function ResultProgressForm({
       order_id: orderId,
       stage: "result",
       data: {
-        yield_result: existingData?.data?.yield_result || "no_gain",
+        status: existingData?.data?.status || false,
         yield_amount: existingData?.data?.yield_amount || undefined,
       },
     },
   });
 
-  const watchYieldResult = form.watch("data.yield_result");
+  const watchStatus = form.watch("data.status");
 
   const onSubmit = async (values: ResultProgress) => {
     setIsLoading(true);
     try {
-      // Remove yield_amount if result is no_gain
-      if (values.data.yield_result === "no_gain") {
+      // Remove yield_amount if status is false (no gain)
+      if (!values.data.status) {
         delete values.data.yield_amount;
       }
 
@@ -175,37 +172,34 @@ export function ResultProgressForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="data.yield_result"
+              name="data.status"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Yield Result</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Clear yield_amount when switching to no_gain
-                      if (value === "no_gain") {
-                        form.setValue("data.yield_amount", undefined);
-                      }
-                    }}
-                    defaultValue={field.value}
-                    disabled={isLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select yield result" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="gain">Gain Yield</SelectItem>
-                      <SelectItem value="no_gain">No Gain</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        // Clear yield_amount when switching to false (no gain)
+                        if (!checked) {
+                          form.setValue("data.yield_amount", undefined);
+                        }
+                      }}
+                      disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Gain Yield</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Check this box if there is a yield gain from the application
+                    </p>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {watchYieldResult === "gain" && (
+            {watchStatus && (
               <FormField
                 control={form.control}
                 name="data.yield_amount"
@@ -224,7 +218,7 @@ export function ResultProgressForm({
                           const value = e.target.value;
                           field.onChange(value ? parseFloat(value) : undefined);
                         }}
-                        disabled={isLoading}
+                        disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                       />
                     </FormControl>
                     <FormMessage />
@@ -234,7 +228,7 @@ export function ResultProgressForm({
             )}
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingData ? "Update" : "Save"} Result Data
               </Button>

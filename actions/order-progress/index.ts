@@ -2,14 +2,14 @@
 
 /**
  * Order Progress Actions
- * 
+ *
  * Modul ini berisi semua server actions untuk mengelola progres pesanan.
  * Fitur ini memungkinkan tracking progres pesanan melalui 4 tahapan:
  * 1. Warehouse (Gudang) - Input data gudang dan status
  * 2. Shipping (Pengiriman) - Input data pengiriman dan status
  * 3. Applied (Aplikasi) - Input estimasi area aplikasi
  * 4. Result (Hasil) - Input hasil yield
- * 
+ *
  * Dependencies:
  * - @/lib/db: Database connection menggunakan Prisma
  * - next/cache: Untuk revalidasi cache Next.js
@@ -20,7 +20,7 @@
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
+import { Prisma, OrderStatus } from "@prisma/client";
 import {
   OrderProgressSchema,
   WarehouseProgressSchema,
@@ -28,29 +28,91 @@ import {
   AppliedProgressSchema,
   ResultProgressSchema,
   type ProgressStage,
+  type ShippingData,
 } from "@/schema/order-progress";
 
 /**
- * Membuat progres pesanan baru untuk tahapan tertentu
+ * Menentukan status order berdasarkan progress yang ada
  * 
+ * @param orderId - ID pesanan
+ * @returns Promise<OrderStatus> - Status order yang sesuai
+ */
+async function determineOrderStatus(orderId: string): Promise<OrderStatus> {
+  // Ambil semua progress untuk order ini
+  const allProgress = await db.orderProgress.findMany({
+    where: { order_id: orderId },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  // Cari progress shipping untuk cek date_received
+  const shippingProgress = allProgress.find(p => p.stage === 'shipping');
+  if (shippingProgress) {
+    const shippingData = shippingProgress.data as unknown as ShippingData;
+    
+    // Jika ada date_received, status menjadi "delivered"
+    if (shippingData.date_received) {
+      return 'delivered';
+    }
+    
+    // Jika shipping status true dan ada date_shipping, status menjadi "shipped"
+    if (shippingData.status && shippingData.date_shipping) {
+      return 'shipped';
+    }
+  }
+
+  // Cari progress warehouse
+  const warehouseProgress = allProgress.find(p => p.stage === 'warehouse');
+  if (warehouseProgress) {
+    const warehouseData = warehouseProgress.data as unknown as { status: boolean };
+    
+    // Jika warehouse status true, status menjadi "warehouse"
+    if (warehouseData.status) {
+      return 'warehouse';
+    }
+  }
+
+  // Default tetap pending jika tidak ada kondisi yang terpenuhi
+  return 'pending';
+}
+
+/**
+ * Update status order berdasarkan progress
+ * 
+ * @param orderId - ID pesanan
+ */
+async function updateOrderStatus(orderId: string): Promise<void> {
+  const newStatus = await determineOrderStatus(orderId);
+  
+  await db.order.update({
+    where: { id: orderId },
+    data: { 
+      status: newStatus,
+      updatedAt: new Date()
+    }
+  });
+}
+
+/**
+ * Membuat progres pesanan baru untuk tahapan tertentu
+ *
  * @param formData - FormData yang berisi:
  *   - order_id: ID pesanan (string)
  *   - stage: Tahapan progres ("warehouse" | "shipping" | "applied" | "result")
  *   - data: Data JSON sesuai dengan tahapan (string yang akan di-parse)
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   data?: OrderProgress;
  *   message?: string;
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const formData = new FormData();
  * formData.append("order_id", "order-123");
  * formData.append("stage", "warehouse");
  * formData.append("data", JSON.stringify({ status: true, notes: "Ready" }));
- * 
+ *
  * const result = await createOrderProgress(formData);
  * if (result.success) {
  *   console.log("Progress created:", result.data);
@@ -63,6 +125,20 @@ export async function createOrderProgress(formData: FormData) {
       stage: formData.get("stage") as ProgressStage,
       data: JSON.parse(formData.get("data") as string),
     };
+
+    // Check order status first - prevent progress update if order is cancelled
+    const order = await db.order.findUnique({
+      where: { id: rawData.order_id },
+      select: { status: true },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    if (order.status === "cancelled") {
+      throw new Error("Cannot create progress for cancelled order");
+    }
 
     // Validate based on stage
     let validatedData;
@@ -107,6 +183,9 @@ export async function createOrderProgress(formData: FormData) {
       },
     });
 
+    // Update order status based on progress
+    await updateOrderStatus(validatedData.order_id);
+
     revalidatePath("/admin/order");
     revalidatePath(`/admin/order/detail/${validatedData.order_id}`);
 
@@ -127,26 +206,26 @@ export async function createOrderProgress(formData: FormData) {
 
 /**
  * Memperbarui progres pesanan yang sudah ada
- * 
+ *
  * @param id - ID progres yang akan diupdate (string)
  * @param formData - FormData yang berisi:
  *   - order_id: ID pesanan (string)
  *   - stage: Tahapan progres (string)
  *   - data: Data JSON yang diperbarui (string)
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   data?: OrderProgress;
  *   message?: string;
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const formData = new FormData();
  * formData.append("order_id", "order-123");
  * formData.append("stage", "warehouse");
  * formData.append("data", JSON.stringify({ status: true, notes: "Updated" }));
- * 
+ *
  * const result = await updateOrderProgress("progress-id", formData);
  */
 export async function updateOrderProgress(id: string, formData: FormData) {
@@ -156,6 +235,20 @@ export async function updateOrderProgress(id: string, formData: FormData) {
       stage: formData.get("stage") as ProgressStage,
       data: JSON.parse(formData.get("data") as string),
     };
+
+    // Check order status first - prevent progress update if order is cancelled
+    const order = await db.order.findUnique({
+      where: { id: rawData.order_id },
+      select: { status: true },
+    });
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    if (order.status === "cancelled") {
+      throw new Error("Cannot update progress for cancelled order");
+    }
 
     // Validate based on stage
     let validatedData;
@@ -185,6 +278,9 @@ export async function updateOrderProgress(id: string, formData: FormData) {
       },
     });
 
+    // Update order status based on progress
+    await updateOrderStatus(validatedData.order_id);
+
     revalidatePath("/admin/order");
     revalidatePath(`/admin/order/detail/${validatedData.order_id}`);
 
@@ -205,15 +301,15 @@ export async function updateOrderProgress(id: string, formData: FormData) {
 
 /**
  * Mengambil semua progres pesanan berdasarkan ID pesanan
- * 
+ *
  * @param orderId - ID pesanan (string)
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   data?: OrderProgress[];
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const result = await getOrderProgressByOrderId("order-123");
  * if (result.success) {
@@ -247,16 +343,16 @@ export async function getOrderProgressByOrderId(orderId: string) {
 
 /**
  * Mengambil progres untuk tahapan tertentu dari pesanan
- * 
+ *
  * @param orderId - ID pesanan (string)
  * @param stage - Tahapan yang dicari ("warehouse" | "shipping" | "applied" | "result")
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   data?: OrderProgress | null;
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const result = await getStageProgress("order-123", "warehouse");
  * if (result.success && result.data) {
@@ -290,15 +386,15 @@ export async function getStageProgress(orderId: string, stage: ProgressStage) {
 
 /**
  * Menghapus progres pesanan berdasarkan ID
- * 
+ *
  * @param id - ID progres yang akan dihapus (string)
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   message?: string;
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const result = await deleteOrderProgress("progress-id");
  * if (result.success) {
@@ -309,10 +405,20 @@ export async function deleteOrderProgress(id: string) {
   try {
     const progress = await db.orderProgress.findUnique({
       where: { id },
+      include: {
+        Order: {
+          select: { status: true },
+        },
+      },
     });
 
     if (!progress) {
       throw new Error("Progress not found");
+    }
+
+    // Check order status - prevent progress deletion if order is cancelled
+    if (progress.Order.status === "cancelled") {
+      throw new Error("Cannot delete progress for cancelled order");
     }
 
     await db.orderProgress.delete({
@@ -338,14 +444,14 @@ export async function deleteOrderProgress(id: string) {
 
 /**
  * Mengambil status lengkap semua tahapan progres untuk pesanan tertentu
- * 
+ *
  * Fungsi ini mengembalikan status completed untuk setiap tahapan berdasarkan:
  * - Warehouse & Shipping: status === true
  * - Applied: est_applied_area > 0
- * - Result: yield_result exists
- * 
+ * - Result: status === true
+ *
  * @param orderId - ID pesanan (string)
- * 
+ *
  * @returns Promise<{
  *   success: boolean;
  *   data?: Array<{
@@ -357,7 +463,7 @@ export async function deleteOrderProgress(id: string) {
  *   }>;
  *   error?: string;
  * }>
- * 
+ *
  * @example
  * const result = await getProgressStagesStatus("order-123");
  * if (result.success) {
@@ -396,8 +502,8 @@ export async function getProgressStagesStatus(orderId: string) {
               data.est_applied_area > 0;
             break;
           case "result":
-            // For result, check if yield_result exists
-            completed = !!data?.yield_result;
+            // For result, check if status is true
+            completed = !!data?.status;
             break;
           default:
             completed = false;

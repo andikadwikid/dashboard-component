@@ -72,6 +72,8 @@ interface ShippingProgressFormProps {
     };
   } | null;
   onSuccess?: () => void;
+  /** Status order untuk menentukan apakah form dapat diakses */
+  orderStatus?: string;
 }
 
 /**
@@ -108,6 +110,7 @@ export function ShippingProgressForm({
   orderId,
   existingData,
   onSuccess,
+  orderStatus,
 }: ShippingProgressFormProps) {
   // State untuk loading indicator
   const [isLoading, setIsLoading] = useState(false);
@@ -194,7 +197,7 @@ export function ShippingProgressForm({
                           );
                         }
                       }}
-                      disabled={isLoading}
+                      disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select status" />
@@ -233,7 +236,7 @@ export function ShippingProgressForm({
                               : "";
                             field.onChange(date);
                           }}
-                          disabled={isLoading}
+                          disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                         />
                       </FormControl>
                       <FormMessage />
@@ -262,7 +265,7 @@ export function ShippingProgressForm({
                               : "";
                             field.onChange(date);
                           }}
-                          disabled={isLoading}
+                          disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                         />
                       </FormControl>
                       <FormMessage />
@@ -273,7 +276,7 @@ export function ShippingProgressForm({
             )}
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingData ? "Update" : "Save"} Shipping Status
               </Button>

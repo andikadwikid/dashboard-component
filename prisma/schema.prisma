@@ -147,9 +147,9 @@ model Order {
   id                  String      @id @default(cuid())
   customer_history_id String
   sales_id            String
-  status              OrderStatus
+  status              OrderStatus @default(pending)
   createdAt           DateTime    @map("created_at")
-  updatedAt           DateTime    @map("updated_at")
+  updatedAt           DateTime?   @map("updated_at")
 
   customer_history CustomerHistory @relation(fields: [customer_history_id], references: [id])
   sales            User            @relation(fields: [sales_id], references: [id])

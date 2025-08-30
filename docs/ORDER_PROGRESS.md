@@ -20,17 +20,19 @@ Sistem Order Progress Management adalah fitur untuk melacak dan mengelola progre
 - **Prerequisite**: Warehouse harus completed
 
 ### 3. Applied (Aplikasi)
-- **Tujuan**: Input estimasi area aplikasi
+- **Tujuan**: Input estimasi area aplikasi dan area aktual yang diaplikasikan
 - **Data**:
-  - `est_applied_area`: number - Estimasi area yang diaplikasikan
+  - `est_applied_area`: number - Estimasi area yang diaplikasikan (dalam hektar)
+  - `actual_applied_area`: number - Area aktual yang telah diaplikasikan (dalam hektar, optional)
 - **Kondisi Completed**: `data.est_applied_area > 0`
 - **Prerequisite**: Warehouse dan Shipping harus completed
 
 ### 4. Result (Hasil)
 - **Tujuan**: Input hasil yield
 - **Data**:
-  - `yield_result`: any - Hasil yield
-- **Kondisi Completed**: `data.yield_result` exists
+  - `status`: boolean - Status yield (true untuk gain, false untuk no gain)
+  - `yield_amount`: number - Jumlah yield (optional)
+- **Kondisi Completed**: `data.status === true`
 - **Prerequisite**: Warehouse, Shipping, dan Applied harus completed
 
 ## Alur Kerja (Workflow)
@@ -75,7 +77,7 @@ flowchart LR
         W1["status: true"] 
         S1["status: true"]
         A1["est_applied_area > 0"]
-        R1["yield_result exists"]
+        R1["status === true"]
     end
     
     W -.-> W1

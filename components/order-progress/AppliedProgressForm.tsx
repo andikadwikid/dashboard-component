@@ -6,6 +6,7 @@
  * Komponen form untuk mengelola progres tahapan aplikasi (applied) dalam sistem order progress.
  * Form ini memungkinkan pengguna untuk:
  * - Input estimasi area yang diaplikasikan
+ * - Input area aktual yang telah diaplikasikan
  * - Menyimpan atau memperbarui data progres applied
  * 
  * Fitur:
@@ -13,10 +14,11 @@
  * - Support untuk create dan update data
  * - Loading state dengan spinner
  * - Toast notifications untuk feedback
- * - Input numerik untuk area
+ * - Input numerik untuk area dalam satuan hektar
  * 
  * Data yang disimpan:
- * - est_applied_area: number - Estimasi area yang diaplikasikan (dalam satuan yang sesuai)
+ * - est_applied_area: number - Estimasi area yang diaplikasikan (dalam hektar)
+ * - actual_applied_area: number - Area aktual yang telah diaplikasikan (dalam hektar, optional)
  * 
  * Kondisi Completed:
  * - Tahapan ini dianggap selesai jika est_applied_area > 0
@@ -49,7 +51,8 @@ import { Loader2, MapPin } from "lucide-react";
  * @property {Object|null} [existingData] - Data progres applied yang sudah ada (untuk mode edit)
  * @property {string} existingData.id - ID record progres yang sudah ada
  * @property {Object} existingData.data - Data progres applied
- * @property {number} existingData.data.est_applied_area - Estimasi area yang diaplikasikan
+ * @property {number} existingData.data.est_applied_area - Estimasi area yang diaplikasikan (hektar)
+ * @property {number} [existingData.data.actual_applied_area] - Area aktual yang diaplikasikan (hektar, optional)
  * @property {Function} [onSuccess] - Callback function yang dipanggil setelah berhasil menyimpan
  */
 interface AppliedProgressFormProps {
@@ -58,9 +61,12 @@ interface AppliedProgressFormProps {
     id: string;
     data: {
       est_applied_area: number;
+      actual_applied_area?: number;
     };
   } | null;
   onSuccess?: () => void;
+  // Status order untuk disable form jika cancelled
+  orderStatus?: string;
 }
 
 /**
@@ -96,6 +102,7 @@ export function AppliedProgressForm({
   orderId,
   existingData,
   onSuccess,
+  orderStatus,
 }: AppliedProgressFormProps) {
   // State untuk loading indicator
   const [isLoading, setIsLoading] = useState(false);
@@ -108,6 +115,7 @@ export function AppliedProgressForm({
       stage: "applied",
       data: {
         est_applied_area: existingData?.data?.est_applied_area || 0,
+        actual_applied_area: existingData?.data?.actual_applied_area || undefined,
       },
     },
   });
@@ -163,14 +171,40 @@ export function AppliedProgressForm({
                       type="number"
                       step="0.01"
                       min="0"
-                      placeholder="Enter applied area in hectares"
+                      placeholder="Enter estimated applied area in hectares"
                       {...field}
                       value={field.value || ""}
                       onChange={(e) => {
                         const value = e.target.value;
                         field.onChange(value ? parseFloat(value) : 0);
                       }}
-                      disabled={isLoading}
+                      disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="data.actual_applied_area"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Actual Applied Area (ha)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Enter actual applied area in hectares"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value ? parseFloat(value) : undefined);
+                      }}
+                      disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}
                     />
                   </FormControl>
                   <FormMessage />
@@ -183,7 +217,7 @@ export function AppliedProgressForm({
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || orderStatus === 'cancelled' || orderStatus === 'completed'}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {existingData ? "Update" : "Save"} Application Data
               </Button>

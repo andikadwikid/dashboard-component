@@ -244,6 +244,75 @@ export async function cancelOrder(id: string) {
   }
 }
 
+export async function completeOrder(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    // First check if order exists and belongs to the user
+    const existingOrder = await db.order.findUnique({
+      where: {
+        id,
+        sales_id: session.user.id,
+      },
+    });
+
+    if (!existingOrder) {
+      return { error: "Order not found" };
+    }
+
+    // Check if order is already completed
+    if (existingOrder.status === "completed") {
+      return { error: "Order is already completed" };
+    }
+
+    // Check if order is cancelled (cannot complete cancelled orders)
+    if (existingOrder.status === "cancelled") {
+      return { error: "Cannot complete cancelled order" };
+    }
+
+    // Check if result stage is completed
+    const resultProgress = await db.orderProgress.findFirst({
+      where: {
+        order_id: id,
+        stage: "result",
+      },
+    });
+
+    if (!resultProgress) {
+      return { error: "Result stage must be completed before completing order" };
+    }
+
+    const resultData = resultProgress.data as Record<string, unknown>;
+    const isResultCompleted = !!resultData?.status;
+
+    if (!isResultCompleted) {
+      return { error: "Result stage must be completed before completing order" };
+    }
+
+    // Update order status to completed
+    await db.order.update({
+      where: {
+        id,
+        sales_id: session.user.id,
+      },
+      data: {
+        status: "completed",
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/admin/order");
+    revalidatePath(`/admin/order/detail/${id}`);
+    return { success: "Order completed successfully!" };
+  } catch (error) {
+    console.error("Error completing order:", error);
+    return { error: "Failed to complete order" };
+  }
+}
+
 // Helper function to get products for order items
 export async function getProducts() {
   return db.product.findMany({
